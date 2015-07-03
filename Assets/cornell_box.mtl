@@ -1,0 +1,23 @@
+newmtl white
+Kd 0.74 0.74 0.73
+Ks 0.0 0.0 0.0
+Ns 0.0
+Ke 0.0 0.0 0.0
+
+newmtl red
+Kd 0.46 0.04 0.05
+Ks 0.0 0.0 0.0
+Ns 0.0
+kE 0.0 0.0 0.0
+
+newmtl green
+Kd 0.1 0.4 0.08
+Ks 0.0 0.0 0.0
+Ns 0.0
+Ke 0.0 0.0 0.0
+
+newmtl light
+Kd 0.0 0.0 0.0
+Ks 0.0 0.0 0.0
+Ns 0.0
+Ke 17.0 11.4 2.9

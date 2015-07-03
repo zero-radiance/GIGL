@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="External Libraries">
+      <UniqueIdentifier>{f99990cb-9340-457e-bafa-ac2189874ce6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\OpenGL">
+      <UniqueIdentifier>{4e98ae76-fc0d-4a6c-b1cd-01f3e4cad219}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\TinyOBJ">
+      <UniqueIdentifier>{7b8b157f-08e6-449f-ab75-7469956f02c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\GLFW">
+      <UniqueIdentifier>{6eedb431-65e6-46b6-b979-debc8879fddf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Libraries\GLM">
+      <UniqueIdentifier>{a18fd9c4-91fd-4c7b-ba32-b82ebc7abaf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{307f82ae-6c16-4bc8-9147-9e943318eb20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fog">
+      <UniqueIdentifier>{7eccb92c-5db9-4c0d-b14c-7af6efa0b1c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GL">
+      <UniqueIdentifier>{5880ca8a-1eda-44e3-802f-9358201eeb49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RT">
+      <UniqueIdentifier>{896f59ed-4182-4700-a2ab-b7ce2adc6eb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{90900567-6329-4a92-94b0-f44ecf486d4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{3ba5af1c-5127-4f6e-830d-27f03be4c85c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VPL">
+      <UniqueIdentifier>{d57295b2-06d7-4c20-b3cc-646072282394}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Include\TinyOBJ\tiny_obj_loader.cc">
+      <Filter>External Libraries\TinyOBJ</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Include\OpenGL\gl_core_4_4.cpp">
+      <Filter>External Libraries\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\BBox.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\Camera.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\Random.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\Scene.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\Timer.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Fog\DensityField.cpp">
+      <Filter>Fog</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Fog\FogVolume.cpp">
+      <Filter>Fog</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GL\GLShader.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GL\GLUniformBuffer.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GL\GLVertArray.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GL\RTBLockMngr.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RT\PhotonTracer.cpp">
+      <Filter>RT</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\RT\RTBase.cpp">
+      <Filter>RT</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\InputHandler.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\Window.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VPL\OmniShadowMap.cpp">
+      <Filter>VPL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\VPL\PointLight.cpp">
+      <Filter>VPL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GIGL.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Include\TinyOBJ\tiny_obj_loader.h">
+      <Filter>External Libraries\TinyOBJ</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\OpenGL\gl_core_4_4.hpp">
+      <Filter>External Libraries\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\GLFW\glfw3.h">
+      <Filter>External Libraries\GLFW</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\GLFW\glfw3native.h">
+      <Filter>External Libraries\GLFW</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\GLM\glm.hpp">
+      <Filter>External Libraries\GLM</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\GLM\common.hpp">
+      <Filter>External Libraries\GLM</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\GLM\fwd.hpp">
+      <Filter>External Libraries\GLM</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Include\OpenGL\gl_basic_typedefs.h">
+      <Filter>External Libraries\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\BBox.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Camera.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Constants.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Definitions.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Interpolation.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Random.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Scene.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Timer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Utility.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Fog\DensityField.h">
+      <Filter>Fog</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Fog\FogVolume.h">
+      <Filter>Fog</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLPersistentBuffer.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLPersistentBuffer.hpp">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLShader.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLShader.hpp">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLUniformBuffer.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLUniformManager.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLUniformManager.hpp">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLVertArray.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\RTBLockMngr.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RT\KdTree.h">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RT\KdTree.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RT\PhotonTracer.h">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\RT\RTBase.h">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\InputHandler.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\Window.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VPL\LightArray.h">
+      <Filter>VPL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VPL\LightArray.hpp">
+      <Filter>VPL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VPL\OmniShadowMap.h">
+      <Filter>VPL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VPL\OmniShadowMap.hpp">
+      <Filter>VPL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VPL\PointLight.h">
+      <Filter>VPL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\VPL\PointLight.hpp">
+      <Filter>VPL</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Shaders\Render.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Render.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Shadow.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Shadow.geom">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Shadow.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include=".gitignore" />
+  </ItemGroup>
+</Project>

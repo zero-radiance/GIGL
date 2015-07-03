@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F297FF13-5CC0-45E1-A720-9C5A57881BCB}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>GIGL</RootNamespace>
+    <ProjectName>GIGL</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <ExecutablePath>$(SolutionDir)Bin\$(Platform)\$(Configuration);$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(PATH);</ExecutablePath>
+    <IncludePath>$(SolutionDir)Source\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)Source\Libraries;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);</LibraryPath>
+    <SourcePath>$(SolutionDir)Source;$(VC_SourcePath);</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)Temp\$(Platform)\$(Configuration)\</IntDir>
+    <ExecutablePath>$(SolutionDir)Bin\$(Platform)\$(Configuration);$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(PATH);</ExecutablePath>
+    <IncludePath>$(SolutionDir)Source\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)Source\Libraries;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);</LibraryPath>
+    <SourcePath>$(SolutionDir)Source;$(VC_SourcePath);</SourcePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>GLM_FORCE_RADIANS;GLM_FORCE_INLINE;WIN32;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <OpenMPSupport>false</OpenMPSupport>
+      <AdditionalOptions>/Gw /Zc:inline /Zo %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>glfw3d.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 </AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>GLM_FORCE_RADIANS;GLM_FORCE_INLINE;WIN32;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <AdditionalOptions>/Gw /Zc:inline /Zo %(AdditionalOptions)</AdditionalOptions>
+      <OpenMPSupport>true</OpenMPSupport>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>glfw3.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>
+      </AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Common\BBox.cpp" />
+    <ClCompile Include="Source\Common\Camera.cpp" />
+    <ClCompile Include="Source\Common\Random.cpp" />
+    <ClCompile Include="Source\Common\Scene.cpp" />
+    <ClCompile Include="Source\Common\Timer.cpp" />
+    <ClCompile Include="Source\Fog\DensityField.cpp" />
+    <ClCompile Include="Source\Fog\FogVolume.cpp" />
+    <ClCompile Include="Source\GIGL.cpp" />
+    <ClCompile Include="Source\GL\GLShader.cpp" />
+    <ClCompile Include="Source\GL\GLUniformBuffer.cpp" />
+    <ClCompile Include="Source\GL\GLVertArray.cpp" />
+    <ClCompile Include="Source\GL\RTBLockMngr.cpp" />
+    <ClCompile Include="Source\Include\OpenGL\gl_core_4_4.cpp" />
+    <ClCompile Include="Source\Include\TinyOBJ\tiny_obj_loader.cc" />
+    <ClCompile Include="Source\RT\PhotonTracer.cpp" />
+    <ClCompile Include="Source\RT\RTBase.cpp" />
+    <ClCompile Include="Source\UI\InputHandler.cpp" />
+    <ClCompile Include="Source\UI\Window.cpp" />
+    <ClCompile Include="Source\VPL\OmniShadowMap.cpp" />
+    <ClCompile Include="Source\VPL\PointLight.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Common\BBox.h" />
+    <ClInclude Include="Source\Common\Camera.h" />
+    <ClInclude Include="Source\Common\Constants.h" />
+    <ClInclude Include="Source\Common\Definitions.h" />
+    <ClInclude Include="Source\Common\Interpolation.hpp" />
+    <ClInclude Include="Source\Common\Random.h" />
+    <ClInclude Include="Source\Common\Scene.h" />
+    <ClInclude Include="Source\Common\Timer.h" />
+    <ClInclude Include="Source\Common\Utility.hpp" />
+    <ClInclude Include="Source\Fog\DensityField.h" />
+    <ClInclude Include="Source\Fog\FogVolume.h" />
+    <ClInclude Include="Source\GL\GLPersistentBuffer.h" />
+    <ClInclude Include="Source\GL\GLPersistentBuffer.hpp" />
+    <ClInclude Include="Source\GL\GLShader.h" />
+    <ClInclude Include="Source\GL\GLShader.hpp" />
+    <ClInclude Include="Source\GL\GLUniformBuffer.h" />
+    <ClInclude Include="Source\GL\GLUniformManager.h" />
+    <ClInclude Include="Source\GL\GLUniformManager.hpp" />
+    <ClInclude Include="Source\GL\GLVertArray.h" />
+    <ClInclude Include="Source\GL\RTBLockMngr.h" />
+    <ClInclude Include="Source\Include\GLFW\glfw3.h" />
+    <ClInclude Include="Source\Include\GLFW\glfw3native.h" />
+    <ClInclude Include="Source\Include\GLM\common.hpp" />
+    <ClInclude Include="Source\Include\GLM\fwd.hpp" />
+    <ClInclude Include="Source\Include\GLM\glm.hpp" />
+    <ClInclude Include="Source\Include\OpenGL\gl_basic_typedefs.h" />
+    <ClInclude Include="Source\Include\OpenGL\gl_core_4_4.hpp" />
+    <ClInclude Include="Source\Include\TinyOBJ\tiny_obj_loader.h" />
+    <ClInclude Include="Source\RT\KdTree.h" />
+    <ClInclude Include="Source\RT\KdTree.hpp" />
+    <ClInclude Include="Source\RT\PhotonTracer.h" />
+    <ClInclude Include="Source\RT\RTBase.h" />
+    <ClInclude Include="Source\UI\InputHandler.h" />
+    <ClInclude Include="Source\UI\Window.h" />
+    <ClInclude Include="Source\VPL\LightArray.h" />
+    <ClInclude Include="Source\VPL\LightArray.hpp" />
+    <ClInclude Include="Source\VPL\OmniShadowMap.h" />
+    <ClInclude Include="Source\VPL\OmniShadowMap.hpp" />
+    <ClInclude Include="Source\VPL\PointLight.h" />
+    <ClInclude Include="Source\VPL\PointLight.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="Source\Shaders\Render.frag" />
+    <None Include="Source\Shaders\Render.vert" />
+    <None Include="Source\Shaders\Shadow.frag" />
+    <None Include="Source\Shaders\Shadow.geom" />
+    <None Include="Source\Shaders\Shadow.vert" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
