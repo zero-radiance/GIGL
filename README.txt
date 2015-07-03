@@ -1,8 +1,9 @@
 GIGL - Global Illumination OpenGL Renderer
 
 Loosely based on the following papers:
-1. Instant multiple scattering for interactive rendering of heterogeneous participating media
-2. Approximate bias compensation for rendering scenes with heterogeneous participating media
+1. Keller, "Instant radiosity";
+2. Engelhardt et al., "Instant multiple scattering for interactive rendering of heterogeneous participating media";
+3. Engelhardt et al., "Approximate bias compensation for rendering scenes with heterogeneous participating media".
 
 Requirements:
 1. MSVC2013 redistributables (https://www.microsoft.com/en-us/download/details.aspx?id=40784);
