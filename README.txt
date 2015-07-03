@@ -1,6 +1,12 @@
-GLGI - Small Global Illumination OpenGL Renderer
+GIGL - Global Illumination OpenGL Renderer
 
-Requirements: MSVC2013 redistributables and graphics drivers with OpenGL 4.4 support.
+Loosely based on the following papers:
+1. Instant multiple scattering for interactive rendering of heterogeneous participating media
+2. Approximate bias compensation for rendering scenes with heterogeneous participating media
+
+Requirements:
+1. MSVC2013 redistributables (https://www.microsoft.com/en-us/download/details.aspx?id=40784);
+2. graphics drivers with OpenGL 4.4 support.
 
 Controls:
 * SPACE      reset all settings;
