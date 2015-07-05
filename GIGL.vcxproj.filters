@@ -219,6 +219,9 @@
     <ClInclude Include="Source\VPL\PointLight.hpp">
       <Filter>VPL</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Common\Halton.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Shaders\Render.frag">

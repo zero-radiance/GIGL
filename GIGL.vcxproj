@@ -137,6 +137,7 @@
     <ClInclude Include="Source\Common\Camera.h" />
     <ClInclude Include="Source\Common\Constants.h" />
     <ClInclude Include="Source\Common\Definitions.h" />
+    <ClInclude Include="Source\Common\Halton.hpp" />
     <ClInclude Include="Source\Common\Interpolation.hpp" />
     <ClInclude Include="Source\Common\Random.h" />
     <ClInclude Include="Source\Common\Scene.h" />
