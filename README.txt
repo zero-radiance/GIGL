@@ -9,6 +9,10 @@ Requirements:
 1. MSVC2013 redistributables (https://www.microsoft.com/en-us/download/details.aspx?id=40784);
 2. graphics drivers with OpenGL 4.4 support.
 
+Notice:
+During the first start up, the renderer will procedurally generate volume density textures. This make take a few seconds.
+The subsequent program launches will be considerably faster, as the textures will be read from disk.
+
 Controls:
 * SPACE      reset all settings;
 * G          toggle global illumination;
