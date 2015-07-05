@@ -17,14 +17,16 @@ GLUniformBuffer::GLUniformBuffer(const char* const block_name, const GLuint n_me
     gl::BufferData(gl::UNIFORM_BUFFER, m_block_sz, nullptr, gl::DYNAMIC_DRAW);
     // Allocate buffer on CPU
     m_block_buffer = new GLubyte[m_block_sz];
-    // Query for member indices
-    GLuint* indices = new GLuint[m_n_members];
-    gl::GetUniformIndices(prog_handle, m_n_members, member_names, indices);
-    // Query for member offsets
-    m_offsets = new GLint[m_n_members];
-    gl::GetActiveUniformsiv(prog_handle, m_n_members, indices, gl::UNIFORM_OFFSET, m_offsets);
-    // Free memory
-    delete[] indices;
+    if (member_names) {
+        // Query for member indices
+        GLuint* indices = new GLuint[m_n_members];
+        gl::GetUniformIndices(prog_handle, m_n_members, member_names, indices);
+        // Query for member offsets
+        m_offsets = new GLint[m_n_members];
+        gl::GetActiveUniformsiv(prog_handle, m_n_members, indices, gl::UNIFORM_OFFSET, m_offsets);
+        // Free memory
+        delete[] indices;
+    }
 }
 
 GLUniformBuffer::GLUniformBuffer(const GLUniformBuffer& ubo): m_n_members{ubo.m_n_members},
@@ -88,18 +90,25 @@ GLint GLUniformBuffer::calcStructStride(const GLint init_struct_cnt) const {
 
 void GLUniformBuffer::loadStructToArray(const GLint index, const GLint stride,
                                         const GLuint* const elem_byte_sz,
-                                        const GLubyte* const data) {
-    GLubyte* bufferPos{m_block_buffer + index * stride};
-    for (GLuint i = 0, dataOffset = 0; i < m_n_members; dataOffset += elem_byte_sz[i], i++) {
-        memcpy(bufferPos + m_offsets[i], data + dataOffset, elem_byte_sz[i]);
+                                        const void* const data) {
+    const auto byte_data = reinterpret_cast<const GLubyte* const>(data);
+    GLubyte* const buffer_pos{m_block_buffer + index * stride};
+    for (GLuint i = 0, data_offset = 0; i < m_n_members; data_offset += elem_byte_sz[i], i++) {
+        memcpy(buffer_pos + m_offsets[i], byte_data + data_offset, elem_byte_sz[i]);
     }
     m_is_buffered = false;
 }
 
-void GLUniformBuffer::buffer(const GLuint* const n_data_elems, const GLfloat* const data) {
-    for (GLuint i = 0, dataOffset = 0; i < m_n_members; dataOffset += n_data_elems[i], i++) {
-        memcpy(m_block_buffer + m_offsets[i], data + dataOffset, n_data_elems[i] * sizeof(GLfloat));
+void GLUniformBuffer::buffer(const GLuint* const elem_byte_sz, const void* const data) {
+    const auto byte_data = reinterpret_cast<const GLubyte* const>(data);
+    for (GLuint i = 0, data_offset = 0; i < m_n_members; data_offset += elem_byte_sz[i], i++) {
+        memcpy(m_block_buffer + m_offsets[i], byte_data + data_offset, elem_byte_sz[i]);
     }
+    buffer();
+}
+
+void GLUniformBuffer::buffer(const GLuint data_byte_sz, const void* const data) {
+    memcpy(m_block_buffer, data, data_byte_sz);
     buffer();
 }
 

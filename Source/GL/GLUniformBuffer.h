@@ -15,9 +15,13 @@ public:
     GLint calcStructStride(const GLint init_struct_cnt) const;
     // Loads single struct into array of structs
     void loadStructToArray(const GLint index, const GLint stride, const GLuint* const elem_byte_sz,
-                           const GLubyte* const data);
+                           const void* const data);
     // Make a local copy of data, and then copy it to GPU
-    void buffer(const GLuint* const n_data_elems, const GLfloat* const data);
+    // Requires size in bytes specified for each element (member)
+    void buffer(const GLuint* const elem_byte_sz, const void* const data);
+    // Make a local copy of data, and then copy it to GPU
+    // Copies the whole block of data, ignoring offsets. Useful for std140 layout
+    void buffer(const GLuint data_byte_sz, const void* const data);
     // Copies preloaded data to GPU
     void buffer();
     // Bind uniform buffer object to to uniform buffer binding point
