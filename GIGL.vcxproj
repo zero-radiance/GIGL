@@ -120,6 +120,7 @@
     <ClCompile Include="Source\Fog\FogVolume.cpp" />
     <ClCompile Include="Source\GIGL.cpp" />
     <ClCompile Include="Source\GL\GLShader.cpp" />
+    <ClCompile Include="Source\GL\GLTextureBuffer.cpp" />
     <ClCompile Include="Source\GL\GLUniformBuffer.cpp" />
     <ClCompile Include="Source\GL\GLVertArray.cpp" />
     <ClCompile Include="Source\GL\RTBLockMngr.cpp" />
@@ -137,6 +138,7 @@
     <ClInclude Include="Source\Common\Camera.h" />
     <ClInclude Include="Source\Common\Constants.h" />
     <ClInclude Include="Source\Common\Definitions.h" />
+    <ClInclude Include="Source\Common\Halton.hpp" />
     <ClInclude Include="Source\Common\Interpolation.hpp" />
     <ClInclude Include="Source\Common\Random.h" />
     <ClInclude Include="Source\Common\Scene.h" />
@@ -148,6 +150,7 @@
     <ClInclude Include="Source\GL\GLPersistentBuffer.hpp" />
     <ClInclude Include="Source\GL\GLShader.h" />
     <ClInclude Include="Source\GL\GLShader.hpp" />
+    <ClInclude Include="Source\GL\GLTextureBuffer.h" />
     <ClInclude Include="Source\GL\GLUniformBuffer.h" />
     <ClInclude Include="Source\GL\GLUniformManager.h" />
     <ClInclude Include="Source\GL\GLUniformManager.hpp" />

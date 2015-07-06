@@ -97,6 +97,9 @@
       <Filter>VPL</Filter>
     </ClCompile>
     <ClCompile Include="Source\GIGL.cpp" />
+    <ClCompile Include="Source\GL\GLTextureBuffer.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Include\TinyOBJ\tiny_obj_loader.h">
@@ -218,6 +221,12 @@
     </ClInclude>
     <ClInclude Include="Source\VPL\PointLight.hpp">
       <Filter>VPL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Halton.hpp">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLTextureBuffer.h">
+      <Filter>GL</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

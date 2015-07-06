@@ -11,9 +11,9 @@ using glm::normalize;
 CONSTEXPR uint	  n_mesh_attr         = 2;		        // Position, normal
 CONSTEXPR GLsizei mesh_attr_lengths[] = {3, 3};         // vec3, vec3
 CONSTEXPR uint	  n_mat_attr          = 4;			    // k_d, k_s, n_s, emission
-CONSTEXPR uint    mat_attr_lengths[]  = {3, 3, 1, 3};   // vec3, vec3, float, vec3
 CONSTEXPR GLchar* mat_attr_names[]    = {"MaterialInfo.k_d", "MaterialInfo.k_s",
                                          "MaterialInfo.n_s", "MaterialInfo.k_e"};
+CONSTEXPR uint    mat_attr_byte_sz[]  = {sizeof(vec3), sizeof(vec3), sizeof(GLfloat), sizeof(vec3)};
 
 Scene::Scene(): m_geom_va{1, mesh_attr_lengths}, m_fog_vol{nullptr},
                 m_fog_enabled{false}, m_kd_tree{nullptr} {}
@@ -114,7 +114,7 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
                                        k_s.r, k_s.g, k_s.b,
                                        n_s,
                                        k_e.r, k_e.g, k_e.b};
-            curr_object->ubo.buffer(mat_attr_lengths, matData);
+            curr_object->ubo.buffer(mat_attr_byte_sz, matData);
             // Store coefficients for raytracing
             m_materials.emplace_back(k_d, k_s, n_s, k_e);
         }

@@ -40,6 +40,7 @@
 #define TEX_U_VPL_SM	2               // Virtual Point Light (VPL) shadow map
 #define TEX_U_ACCUM		3               // Accumulation buffer texture for progressive rendering
 #define TEX_U_PI_DENS   4               // Preintegrated fog density values
+#define TEX_U_HALTON    5               // Halton sequence texture buffer object
 
 /* Uniform locations */
 #define UL_SM_MODELMAT	0               // Model matrix
