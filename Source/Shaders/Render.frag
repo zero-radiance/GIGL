@@ -66,6 +66,7 @@ uniform float                  inv_max_dist_sq;     // Inverse max. [shadow] dis
 uniform sampler3D     vol_dens;         // Normalized volume density (3D texture)
 uniform sampler3D     pi_dens;          // Preintegrated fog density values
 uniform vec3          fog_bounds[2];    // Minimal and maximal bounding points of fog volume
+uniform vec3          inv_fog_dims;     // Inverse of fog dimensions
 uniform float         sca_k;            // Scattering coefficient per unit density
 uniform float         ext_k;            // Extinction coefficient per unit density
 uniform float         sca_albedo;       // Probability of photon being scattered
@@ -108,8 +109,7 @@ bool intersectBBox(in const vec3 bound_pts[2], in const vec3 ray_o, in const vec
 
 float calcFogDens(in const vec3 w_pos) {
     const vec3 r_pos = w_pos - fog_bounds[0];
-    // TODO: precompute inverse diagonal
-    const vec3 n_pos = r_pos / (fog_bounds[1] - fog_bounds[0]);
+    const vec3 n_pos = r_pos * inv_fog_dims;
     return texture(vol_dens, n_pos).r;
 }
 

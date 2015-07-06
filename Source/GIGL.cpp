@@ -89,6 +89,7 @@ int main(int, char**) {
     sp.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
     sp.setUniformValue("fog_bounds[0]",   fog_pt_min);
     sp.setUniformValue("fog_bounds[1]",   fog_pt_max);
+    sp.setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
     sp.setUniformValue("model_mat",       model_mat);
     sp.setUniformValue("MVP",             MVP);
     sp.setUniformValue("norm_mat",        norm_mat);
