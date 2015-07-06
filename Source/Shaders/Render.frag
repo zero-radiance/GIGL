@@ -3,7 +3,7 @@
 #define PI            3.14159274    // π
 #define INV_PI        0.318309873   // 1 / π
 #define CAM_RES       800           // Camera sensor resolution
-#define GAMMA         vec3(2.2)     // Gamma value for gamma correction
+#define GAMMA         2.2333333     // Gamma value for gamma correction
 #define HG_G          0.25          // Henyey-Greenstein scattering asymmetry parameter
 #define N_PPLS        1             // Number of primary lights
 #define N_VPLS        150           // Number of secondary lights
@@ -317,12 +317,12 @@ void main() {
         color = vec3(1.0) - exp(-exposure * color);
         if (frame_id > 0) {
             // Query the old value; undo gamma correction
-            const vec3 prev_color = pow(queryAccumBuffer(), GAMMA);
+            const vec3 prev_color = pow(queryAccumBuffer(), vec3(GAMMA));
             // Blend values
             color = (color + frame_id * prev_color) / (frame_id + 1);
         }
         // Perform gamma correction
-        color = pow(color, 1.0 / GAMMA);
+        color = pow(color, vec3(1.0 / GAMMA));
         // Write the result
         frag_col = vec4(color, 1.0);
     } else {
