@@ -3,7 +3,7 @@
 #include <OpenGL\gl_basic_typedefs.h>
 #include "..\Common\Definitions.h"
 
-/* Implements OpenGL Uniform Buffers of non-std layout */
+/* Implements OpenGL uniform buffers of non-std layout */
 class GLUniformBuffer {
 public:
     GLUniformBuffer() = delete;
