@@ -5,10 +5,12 @@
 #include "Common\Scene.h"
 #include "Common\Timer.h"
 #include "Common\Utility.hpp"
+#include "Common\Halton.hpp"
 #include "RT\PhotonTracer.h"
 #include "VPL\OmniShadowMap.hpp"
 #include "VPL\PointLight.hpp"
 #include "GL\GLShader.hpp"
+#include "GL\GLTextureBuffer.h"
 #include "GL\RTBLockMngr.h"
 #include "GL\GLUniformManager.hpp"
 #include "UI\InputHandler.h"
@@ -71,6 +73,11 @@ int main(int, char**) {
     // Declare VPLs
     LightArray<VPL> vpls{MAX_N_VPLS};
     OmniShadowMap vpl_OSM{SEC_SM_RES, MAX_N_VPLS, MAX_DIST, TEX_U_VPL_SM};
+    // Create a Halton sequence buffer object
+    static const GLuint seq_sz{30 * 24};   // 30 frames with at most 24 samples per frame
+    GLfloat hal_seq[seq_sz];
+    HaltonSG::generate<2>(hal_seq);
+    GLTextureBuffer hal_tbo{TEX_U_HALTON, gl::R32F, sizeof(hal_seq), hal_seq};
     // Set static uniforms
     sp.setUniformValue("cam_w_pos",       cam.worldPos());
     sp.setUniformValue("vol_dens",        TEX_U_DENS_V);
@@ -78,6 +85,7 @@ int main(int, char**) {
     sp.setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
     sp.setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
     sp.setUniformValue("accum_buffer",    TEX_U_ACCUM);
+    sp.setUniformValue("halton_seq",      TEX_U_HALTON);
     sp.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
     sp.setUniformValue("fog_bounds[0]",   fog_pt_min);
     sp.setUniformValue("fog_bounds[1]",   fog_pt_max);

@@ -1,47 +1,49 @@
 #version 440
 
-#define PI		   	  3.14159274	// π
-#define INV_PI	   	  0.318309873	// 1 / π
-#define CAM_RES	   	  800			// Camera sensor resolution
-#define GAMMA 	   	  vec3(2.2)		// Gamma value for gamma correction
-#define HG_G	   	  0.25			// Henyey-Greenstein scattering asymmetry parameter
-#define N_PPLS        1				// Number of primary lights
-#define N_VPLS     	  150			// Number of secondary lights
-#define OFFSET	   	  0.001			// Shadow mapping offset
-#define R_M_INTERVALS 8				// Number of ray marching intervals
-#define CLAMP_DIST_SQ 75.0 * 75.0	// Radius squared used for clamping 	
+#define PI            3.14159274    // π
+#define INV_PI        0.318309873   // 1 / π
+#define CAM_RES       800           // Camera sensor resolution
+#define GAMMA         vec3(2.2)     // Gamma value for gamma correction
+#define HG_G          0.25          // Henyey-Greenstein scattering asymmetry parameter
+#define N_PPLS        1             // Number of primary lights
+#define N_VPLS        150           // Number of secondary lights
+#define OFFSET        0.001         // Shadow mapping offset
+#define R_M_INTERVALS 8             // Number of ray marching intervals
+#define CLAMP_DIST_SQ 75.0 * 75.0   // Radius squared used for clamping
+#define MAX_FRAMES    30            // Maximal number of frames before convergence is achieved
+#define MAX_SAMPLES   24            // Maximal number of samples per pixel
 
 struct PriLight {
-    vec3 w_pos;						// Position in world space
-    vec3 intens;					// Light intensity
+    vec3 w_pos;                     // Position in world space
+    vec3 intens;                    // Light intensity
 };
 
 struct SecLight {
-    vec3  w_pos;					// Position in world space                | Volume and Surface
-    uint  type;						// 1 = VPL in volume, 2 = VPL on surface  | Volume and Surface
-    vec3  intens;					// Intensity (incident radiance)          | Volume and Surface
-    float sca_k;					// Scattering coefficient                 | Volume only
-    vec3  w_inc;					// Incoming direction in world space  	  | Volume and Surface
-    uint  path_id;					// Path index                         	  | Volume and Surface
-    vec3  w_norm;					// Normal direction in world space    	  | Surface only
-    vec3  k_d;						// Diffuse coefficient                	  | Surface only
-    vec3  k_s;						// Specular coefficient               	  | Surface only
-    float n_s;						// Specular exponent                  	  | Surface only
+    vec3  w_pos;                    // Position in world space                | Volume and Surface
+    uint  type;                     // 1 = VPL in volume, 2 = VPL on surface  | Volume and Surface
+    vec3  intens;                   // Intensity (incident radiance)          | Volume and Surface
+    float sca_k;                    // Scattering coefficient                 | Volume only
+    vec3  w_inc;                    // Incoming direction in world space      | Volume and Surface
+    uint  path_id;                  // Path index                             | Volume and Surface
+    vec3  w_norm;                   // Normal direction in world space        | Surface only
+    vec3  k_d;                      // Diffuse coefficient                    | Surface only
+    vec3  k_s;                      // Specular coefficient                   | Surface only
+    float n_s;                      // Specular exponent                      | Surface only
 };
 
 // Vars IN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-layout (early_fragment_tests) in;	// Force early Z-test (prior to fragment shader)
+layout (early_fragment_tests) in;   // Force early Z-test (prior to fragment shader)
 
 smooth in vec3 w_pos;               // Fragment position in world space
 smooth in vec3 w_norm;              // Fragment normal in world space
 
 layout (binding = 0)
 uniform MaterialInfo {
-    vec3  k_d;						// Diffuse coefficient
-    vec3  k_s;						// Specular coefficient
-    vec3  k_e;						// Emission
-    float n_s;						// Specular exponent
+    vec3  k_d;                      // Diffuse coefficient
+    vec3  k_s;                      // Specular coefficient
+    vec3  k_e;                      // Emission
+    float n_s;                      // Specular exponent
 } material;
 
 layout (std140, binding = 1)
@@ -55,27 +57,28 @@ uniform SecLightInfo {
 };
 
 // Omnidirectional shadow mapping
-uniform int 				   n_vpls;				// Number of active VPLs
-uniform samplerCubeArrayShadow ppl_shadow_cube;		// Cubemap array of shadowmaps of PPLs
-uniform samplerCubeArrayShadow vpl_shadow_cube;		// Cubemap array of shadowmaps of VPLs
-uniform float				   inv_max_dist_sq;		// Inverse max. [shadow] distance squared
+uniform int                    n_vpls;              // Number of active VPLs
+uniform samplerCubeArrayShadow ppl_shadow_cube;     // Cubemap array of shadowmaps of PPLs
+uniform samplerCubeArrayShadow vpl_shadow_cube;     // Cubemap array of shadowmaps of VPLs
+uniform float                  inv_max_dist_sq;     // Inverse max. [shadow] distance squared
 
 // Fog
-uniform sampler3D vol_dens;			// Normalized volume density (3D texture)
-uniform sampler3D pi_dens;			// Preintegrated fog density values
-uniform vec3	  fog_bounds[2];	// Minimal and maximal bounding points of fog volume
-uniform float	  sca_k;			// Scattering coefficient per unit density
-uniform float	  ext_k;			// Extinction coefficient per unit density
-uniform float     sca_albedo;		// Probability of photon being scattered
-uniform bool	  clamp_rsq;		// Determines whether radius squared is clamped
+uniform sampler3D     vol_dens;         // Normalized volume density (3D texture)
+uniform sampler3D     pi_dens;          // Preintegrated fog density values
+uniform vec3          fog_bounds[2];    // Minimal and maximal bounding points of fog volume
+uniform float         sca_k;            // Scattering coefficient per unit density
+uniform float         ext_k;            // Extinction coefficient per unit density
+uniform float         sca_albedo;       // Probability of photon being scattered
+uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
 
 // Misc
-uniform bool 	  gi_enabled;		// Flag indicating whether Global Illumination is enabled
-uniform int 	  frame_id;			// Frame index, is set to zero on reset
-uniform int		  exposure;			// Exposure time for basic brightness control
-uniform sampler2D accum_buffer;		// Accumulation buffer (texture)
-uniform vec3 	  cam_w_pos;		// Camera position in world space
-uniform int  	  tri_buf_idx;		// Active buffer index within ring-triple-buffer
+uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
+uniform int           frame_id;         // Frame index, is set to zero on reset
+uniform int           exposure;         // Exposure time for basic brightness control
+uniform sampler2D     accum_buffer;     // Accumulation buffer (texture)
+uniform vec3          cam_w_pos;        // Camera position in world space
+uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
+uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_SAMPLES
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -105,6 +108,7 @@ bool intersectBBox(in const vec3 bound_pts[2], in const vec3 ray_o, in const vec
 
 float calcFogDens(in const vec3 w_pos) {
     const vec3 r_pos = w_pos - fog_bounds[0];
+    // TODO: precompute inverse diagonal
     const vec3 n_pos = r_pos / (fog_bounds[1] - fog_bounds[0]);
     return texture(vol_dens, n_pos).r;
 }
@@ -171,14 +175,14 @@ float evalPhaseHG(in const float cos_the) {
 // Returns radiance emitted in given direction
 vec3 calcLe(in const SecLight vpl, in const vec3 LtoP) {
     switch (vpl.type) {
-        case 1:	// VPL in volume
+        case 1: // VPL in volume
         {
             const float cos_the = dot(LtoP, vpl.w_inc);
             // WT implicitly accounts for extinction
             // Therefore, use scattering albedo and not scattering coefficient
             return evalPhaseHG(cos_the) * sca_albedo * vpl.intens;
         }
-        case 2:	// VPL on surface
+        case 2: // VPL on surface
         {
             // Compute reflected radiance
             const float cos_the_out = max(0.0, dot(LtoP,  vpl.w_norm));
@@ -212,7 +216,7 @@ vec3 calcPriLSContrib(in const int light_id, in const vec3 samp_pt, in const vec
     // LS is visible from sample point
     const float transm  = calcTransm(samp_pt, -LtoP, dist_sq);
     const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
-    const vec3  Li 		= transm * ppls[light_id].intens * falloff;
+    const vec3  Li      = transm * ppls[light_id].intens * falloff;
     // Evaluate rendering equation at sample point
     return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt);
 }
@@ -230,7 +234,7 @@ vec3 calcSecLSContrib(in const int light_id, in const vec3 samp_pt, in const vec
     // LS is visible from sample point
     const float transm  = calcTransm(samp_pt, -LtoP, dist_sq);
     const float falloff = 1.0 / (clamp_rsq ? max(dist_sq, CLAMP_DIST_SQ) : dist_sq);
-    const vec3  Li 		= transm * calcLe(vpls[light_id], LtoP) * falloff;
+    const vec3  Li      = transm * calcLe(vpls[light_id], LtoP) * falloff;
     // Evaluate rendering equation at sample point
     return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt);
 }
@@ -240,20 +244,8 @@ vec3 queryAccumBuffer() {
     return texelFetch(accum_buffer, ivec2(gl_FragCoord.xy), 0).rgb;
 }
 
-float genHalton(in const int base, in const int idx) {
-    float result = 0.0;
-    float f = 1.0;
-    int i = idx;
-    while (i > 0) {
-        f /= base;
-        result += f * (i % base);
-        i = i / base;
-    }
-    return result;
-}
-
 void main() {
-    if (frame_id < 30) {
+    if (frame_id < MAX_FRAMES) {
         // Perform shading
         vec3 color = vec3(0.0);
         if (material.k_e != vec3(0.0)) {
@@ -272,10 +264,10 @@ void main() {
                     t_min = max(t_min, 0.0);
                     t_max = min(t_max, t_frag);
                     /* Compute volume contribution */
-                    const int n_samples = gi_enabled ? 8 : 24;
+                    const int n_samples = gi_enabled ? MAX_SAMPLES / 4 : MAX_SAMPLES;
                     for (int s = 0; s < n_samples; ++s) {
                         // Compute sample position
-                        const float z = genHalton(2, s + n_samples * frame_id);
+                        const float z = texelFetch(halton_seq, s + n_samples * frame_id).r;
                         const float t = t_min + z * (t_max - t_min);
                         const vec3  s_pos = ray_o + t * ray_d;
                         // Compute transmittance on camera-to-sample interval
