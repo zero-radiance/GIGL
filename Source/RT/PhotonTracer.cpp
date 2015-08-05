@@ -178,7 +178,7 @@ namespace rt {
                     break;
                 }
             }
-        } while (la.size() < max_vpl_count && n_paths < 100 * max_vpl_count);
+        } while (la.size() < max_vpl_count && n_paths < static_cast<uint>(100 * max_vpl_count));
         if (la.size() < max_vpl_count) {
             // Unable to (efficiently) create VPLs; abort
             la.reset();
