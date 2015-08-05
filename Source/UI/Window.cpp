@@ -189,6 +189,9 @@ Window::Window(Window&& wnd): m_window{wnd.m_window}, m_res_x{wnd.m_res_x}, m_re
 Window& Window::operator=(Window&& wnd) {
     assert(m_is_ok);
     assert(this != &wnd);
+    // Release memory
+    destroy();
+    // Now copy the data
     memcpy(this, &wnd, sizeof(*this));
     // Mark as moved
     wnd.m_window = nullptr;
@@ -198,10 +201,14 @@ Window& Window::operator=(Window&& wnd) {
 Window::~Window() {
     // Check if it was moved
     if (m_window) {
-        gl::DeleteTextures(1, &m_tex_handle);
-        glfwDestroyWindow(m_window);
-        glfwTerminate();
+        destroy();
     }
+}
+
+void Window::destroy() {
+    gl::DeleteTextures(1, &m_tex_handle);
+    glfwDestroyWindow(m_window);
+    glfwTerminate();
 }
 
 const bool Window::isOpen() const {

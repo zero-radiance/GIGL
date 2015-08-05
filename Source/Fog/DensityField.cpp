@@ -107,6 +107,9 @@ DensityField::DensityField(const DensityField& df): m_bbox{df.m_bbox}, m_res{df.
 
 DensityField& DensityField::operator=(const DensityField& df) {
     if (this != &df) {
+        // Release memory
+        destroy();
+        // Now copy the data
         m_bbox = df.m_bbox;
         m_res  = df.m_res;
         m_data = new GLubyte[df.size()];
@@ -136,6 +139,9 @@ DensityField::DensityField(DensityField&& df): m_bbox{df.m_bbox}, m_res{df.m_res
 
 DensityField& DensityField::operator=(DensityField&& df) {
     assert(this != &df);
+    // Release memory
+    destroy();
+    // Now copy the data
     memcpy(this, &df, sizeof(*this));
     // Mark as moved
     df.m_tex_handle = 0;
@@ -145,13 +151,17 @@ DensityField& DensityField::operator=(DensityField&& df) {
 DensityField::~DensityField() {
     // Check if it was moved
     if (m_tex_handle) {
-        gl::DeleteTextures(1, &m_tex_handle);
-        delete[] m_data;
-        if (m_pi_dens_data) {
-            gl::DeleteTextures(1, &m_pi_dens_tex_handle);
-            delete[] m_pi_dens_data;
-        }
+        destroy();
     }
+}
+
+void DensityField::destroy() {
+    gl::DeleteTextures(1, &m_tex_handle);
+    delete[] m_data;
+    if (m_pi_dens_data) {
+        gl::DeleteTextures(1, &m_pi_dens_tex_handle);
+        delete[] m_pi_dens_data;
+    };
 }
 
 const BBox& DensityField::bbox() const {

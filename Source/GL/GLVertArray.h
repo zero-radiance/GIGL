@@ -44,6 +44,8 @@ private:
         GLuint min_idx, max_idx;        // Minimal and maximal contained values
         std::vector<GLuint> data_vec;   // Storage
     };
+    // Performs array destruction
+    void destroy();
     // Private data members
     GLuint		  m_handle;             // Unique OpenGL handle
     GLsizei       m_n_vbos;             // Number of Vertex Buffer Objects (VBOs)

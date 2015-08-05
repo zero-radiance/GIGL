@@ -79,6 +79,11 @@ GLVertArray::GLVertArray(const GLVertArray& va): m_n_vbos{va.m_n_vbos},
 
 GLVertArray& GLVertArray::operator=(const GLVertArray& va) {
     if (this != &va) {
+        // Destroy the old array
+        // Technically, it may be possible to reuse it, but
+        // destroying it and creating a new one is simpler and faster
+        destroy();
+        // Now copy the data
         m_n_vbos      = va.m_n_vbos;
         m_vbos        = new VertBuffer[m_n_vbos];
         m_ibo         = va.isIndexed() ? new IndexBuffer : nullptr;
@@ -130,6 +135,11 @@ GLVertArray::GLVertArray(GLVertArray&& va): m_handle{va.m_handle}, m_n_vbos{va.m
 
 GLVertArray& GLVertArray::operator=(GLVertArray&& va) {
     assert(this != &va);
+    // Destroy the old array
+    // Technically, it may be possible to reuse it, but
+    // destroying it and creating a new one is simpler and faster
+    destroy();
+    // Now copy the data
     memcpy(this, &va, sizeof(*this));
     // Mark as moved
     va.m_handle = 0;
@@ -139,18 +149,22 @@ GLVertArray& GLVertArray::operator=(GLVertArray&& va) {
 GLVertArray::~GLVertArray() {
     // Check if it was moved
     if (m_handle) {
-        if (isIndexed()) {
-            gl::DeleteBuffers(1, &m_ibo->handle);
-            delete m_ibo;
-        }
-        GLuint buffer_handles[MAX_N_VBOS];
-        for (auto i = 0; i < m_n_vbos; ++i) {
-            buffer_handles[i] = m_vbos[i].handle;
-        }
-        delete[] m_vbos;
-        gl::DeleteBuffers(m_n_vbos, buffer_handles);
-        gl::DeleteVertexArrays(1, &m_handle);
+        destroy();
     }
+}
+
+void GLVertArray::destroy() {
+    if (isIndexed()) {
+        gl::DeleteBuffers(1, &m_ibo->handle);
+        delete m_ibo;
+    }
+    GLuint buffer_handles[MAX_N_VBOS];
+    for (auto i = 0; i < m_n_vbos; ++i) {
+        buffer_handles[i] = m_vbos[i].handle;
+    }
+    delete[] m_vbos;
+    gl::DeleteBuffers(m_n_vbos, buffer_handles);
+    gl::DeleteVertexArrays(1, &m_handle);
 }
 
 GLuint GLVertArray::id() const {

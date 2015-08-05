@@ -12,6 +12,11 @@ RTBLockMngr::RingTripleBufferLockManager(RTBLockMngr&& rtb_lock_mngr):
 
 RTBLockMngr& RTBLockMngr::operator=(RTBLockMngr&& rtb_lock_mngr) {
     assert(this != &rtb_lock_mngr);
+    // Remove the old fences if needed
+    for (int i = 0; i < 3; ++i) {
+        gl::DeleteSync(m_fences[i]);
+    }
+    // Now copy the data
     memcpy(this, &rtb_lock_mngr, sizeof(*this));
     // Mark as moved
     rtb_lock_mngr.m_buf_idx = -1;

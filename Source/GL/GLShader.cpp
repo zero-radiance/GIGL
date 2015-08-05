@@ -70,6 +70,9 @@ GLSLProgram::GLSLProgram(const GLSLProgram& sp): m_handle{gl::CreateProgram()},
 GLSLProgram& GLSLProgram::operator=(const GLSLProgram& sp) {
     assert(sp.isValid());
     if (this != &sp) {
+        // Delete the old shader program
+        gl::DeleteProgram(m_handle);
+        // Now copy the data
         m_handle    = gl::CreateProgram();
         m_is_ok     = (0 != m_handle);
         m_is_linked = false;
@@ -94,6 +97,9 @@ GLSLProgram::GLSLProgram(GLSLProgram&& sp): m_handle{sp.m_handle}, m_is_ok{sp.m_
 GLSLProgram& GLSLProgram::operator=(GLSLProgram&& sp) {
     assert(sp.isValid());
     assert(this != &sp);
+    // Delete the old shader program
+    gl::DeleteProgram(m_handle);
+    // Now copy the data
     memcpy(this, &sp, sizeof(*this));
     // Mark as moved
     sp.m_handle = 0;
@@ -235,6 +241,8 @@ GLSLProgram::GLSLShader::GLSLShader(const GLSLShader& sh) {
 GLSLProgram::GLSLShader& GLSLProgram::GLSLShader::operator=(const GLSLShader& sh) {
     assert(sh.isValid());
     if (this != &sh) {
+        // Delete the old shader
+        gl::DeleteShader(m_handle);
         // Get shader type
         GLint sh_type;
         gl::GetShaderiv(sh.id(), gl::SHADER_TYPE, &sh_type);
@@ -269,6 +277,9 @@ GLSLProgram::GLSLShader::GLSLShader(GLSLShader&& sh): m_handle{sh.m_handle}, m_i
 GLSLProgram::GLSLShader& GLSLProgram::GLSLShader::operator=(GLSLShader&& sh) {
     assert(sh.isValid());
     assert(this != &sh);
+    // Delete the old shader
+    gl::DeleteShader(m_handle);
+    // Now copy the data
     memcpy(this, &sh, sizeof(*this));
     // Mark as moved
     sh.m_handle = 0;

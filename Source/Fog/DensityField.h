@@ -46,6 +46,8 @@ private:
     GLsizei piDensSize() const;
     // Creates a preintegrated density texture in OpenGL
     void createPiDensTex();
+    // Performs object destruction
+    void destroy();
     // Private data members
     BBox	   m_bbox;		            // Bounding box/volume
     glm::ivec3 m_res;                   // Resolution in X-Y-Z

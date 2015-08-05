@@ -19,6 +19,9 @@ public:
     // Binds buffer to buffer binding point
     void bind(const GLuint bind_idx) const;
 private:
+    // Performs buffer destruction
+    void destroy();
+    // Private data members
     void*  m_buffer;     // Pointer used to write to the buffer
     size_t m_byte_sz;    // Buffer size in bytes
     GLuint m_handle;     // Unique OpenGL handle
