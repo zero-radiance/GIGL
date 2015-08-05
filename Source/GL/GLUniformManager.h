@@ -5,7 +5,7 @@
 
 class GLSLProgram;
 
-/* OpenGL Uniform Manager class for N uniforms */
+/* OpenGL uniform manager class for N uniforms */
 template <int N>
 class GLUniformManager {
 public:

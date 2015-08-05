@@ -4,7 +4,7 @@
 #include <OpenGL\gl_basic_typedefs.h>
 #include "..\Common\Definitions.h"
 
-/* Class representing GL vertex array */
+/* Class representing OpenGL vertex array */
 class GLVertArray {
 public:
     GLVertArray() = delete;

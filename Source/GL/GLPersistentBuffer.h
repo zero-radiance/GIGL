@@ -4,7 +4,7 @@
 #include "..\Common\Definitions.h"
 
 /* Implements persistent OpenGL buffer with EXPLICIT layout, e.g.
-   (std140) Uniform Buffers or (std430) Shader Storage Buffers */
+   (std140) uniform buffers or (std430) shader storage buffers */
 template <GLenum T>
 class GLPersistentBuffer {
 public:
