@@ -74,7 +74,7 @@ GLVertArray::GLVertArray(const GLVertArray& va): m_n_vbos{va.m_n_vbos},
         // ... and copy the data
         m_ibo->data_vec = va.m_ibo->data_vec;
     }
-    if (m_is_buffered) { buffer(); }
+    if (va.m_is_buffered) { buffer(); }
 }
 
 GLVertArray& GLVertArray::operator=(const GLVertArray& va) {
@@ -115,7 +115,7 @@ GLVertArray& GLVertArray::operator=(const GLVertArray& va) {
             // ... and copy the data
             m_ibo->data_vec = va.m_ibo->data_vec;
         }
-        if (m_is_buffered) { buffer(); }
+        if (va.m_is_buffered) { buffer(); }
     }
     return *this;
 }
