@@ -122,7 +122,6 @@ int main(int, char**) {
             rt::PhotonTracer::trace(prim_pl, shoot_dir, params.max_num_vpls, vpls);
             // Disable GI on VPL tracing failure
             params.gi_enabled = params.gi_enabled && !vpls.isEmpty();
-            if (vpls.size() < params.max_num_vpls) printError("VPL tracing problems.");
         }
         // Generate shadow maps
         gl::CullFace(gl::FRONT);

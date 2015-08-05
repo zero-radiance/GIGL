@@ -80,7 +80,6 @@ namespace rt {
                              LightArray<VPL>& la) {
         la.reset();
         uint n_paths{0};    // Total number of paths traced
-        uint n_fails{0};    // Current number of failures to extend/trace path
         do {
             // Start a new path
             ++n_paths;
@@ -125,7 +124,6 @@ namespace rt {
                             // Generate new direction
                             ray = Ray{event_pt, O};
                             // Trace a new ray
-                            n_fails = 0;
                             continue;
                         } else {
                             // Absorption event due to Russian roulette; terminate path
@@ -141,7 +139,6 @@ namespace rt {
                     const vec3& norm{ray.inters.normal};
                     if (dot(ray.d, ray.inters.normal) >= 0.0f || hit_pt.z > MAX_FOG_HEIGHT) {
                         // Invalid intersection
-                        ++n_fails;
                         break;
                     }
                     const PhongMaterial* mat{ray.inters.material};
@@ -170,7 +167,6 @@ namespace rt {
                             // Raise ray origin slightly above surface
                             ray = Ray{hit_pt, O, norm};
                             // Trace a new ray
-                            n_fails = 0;
                             continue;
                         } else {
                             // Absorption event due to Russian roulette; terminate path
@@ -179,14 +175,14 @@ namespace rt {
                     }
                 } else {
                     // No events; terminate path
-                    ++n_fails;
                     break;
                 }
             }
-        } while (la.size() < max_vpl_count && n_fails <= MAX_N_FAILS);
-        if (n_fails > MAX_N_FAILS) {
+        } while (la.size() < max_vpl_count && n_paths < 100 * max_vpl_count);
+        if (la.size() < max_vpl_count) {
             // Unable to (efficiently) create VPLs; abort
             la.reset();
+            printError("VPL tracing problems.");
         } else {
             la.normalizeIntensity(n_paths);
         }
