@@ -41,6 +41,7 @@ private:
         IndexBuffer() = default;
         RULE_OF_ZERO(IndexBuffer);
         GLuint handle;                  // Unique OpenGL handle
+        GLuint min_idx, max_idx;        // Minimal and maximal contained values
         std::vector<GLuint> data_vec;   // Storage
     };
     // Private data members

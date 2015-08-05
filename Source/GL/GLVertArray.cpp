@@ -1,7 +1,11 @@
 #include "GLVertArray.h"
 #include <cassert>
 #include <OpenGL\gl_core_4_4.hpp>
+#include <GLM\detail\func_common.hpp>
 #include "..\Common\Constants.h"
+
+using glm::min;
+using glm::max;
 
 GLVertArray::GLVertArray(const GLuint n_attr, const GLsizei* const component_counts):
                          m_n_vbos{n_attr}, m_vbos{new VertBuffer[n_attr]},
@@ -182,9 +186,14 @@ void GLVertArray::loadIndexData(const size_t n_elems, const GLuint* const data,
     if (!isIndexed()) {
         m_ibo = new IndexBuffer;
         gl::GenBuffers(1, &m_ibo->handle);
+        m_ibo->min_idx = UINT_MAX;
+        m_ibo->max_idx = 0;
     }
     for (auto i = 0; i < n_elems; ++i) {
-        m_ibo->data_vec.push_back(offset + data[i]);
+        const GLuint idx{offset + data[i]};
+        m_ibo->min_idx = min(m_ibo->min_idx, idx);
+        m_ibo->max_idx = max(m_ibo->max_idx, idx);
+        m_ibo->data_vec.push_back(idx);
     }
     m_num_vert = static_cast<GLsizei>(m_ibo->data_vec.size());
     m_is_buffered = false;
@@ -210,7 +219,8 @@ void GLVertArray::draw() const {
     gl::BindVertexArray(m_handle);
     if (isIndexed()) {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, m_ibo->handle);
-        gl::DrawElements(gl::TRIANGLES, m_num_vert, gl::UNSIGNED_INT, nullptr);
+        gl::DrawRangeElements(gl::TRIANGLES, m_ibo->min_idx, m_ibo->max_idx, m_num_vert,
+                              gl::UNSIGNED_INT, nullptr);
     } else {
         gl::DrawArrays(gl::TRIANGLES, 0, m_num_vert);
     }
