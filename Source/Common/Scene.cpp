@@ -87,12 +87,14 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
             if (curr_mat_name) {
                 // Buffer the previous object
                 m_objects.back().va.buffer();
+                m_objects.back().ebo.buffer();
             }
             curr_mat_name = &s->material.name;
             // Create a new object
             GLVertArray		va{n_mesh_attr, mesh_attr_lengths};
-            GLUniformBuffer ub{"MaterialInfo", n_mat_attr, mat_attr_names, prog_handle};
-            m_objects.emplace_back(std::move(va), std::move(ub));
+            GLElementBuffer ebo{};
+            GLUniformBuffer ubo{"MaterialInfo", n_mat_attr, mat_attr_names, prog_handle};
+            m_objects.emplace_back(std::move(va), std::move(ebo), std::move(ubo));
             curr_object = &m_objects[m_objects.size() - 1];
             object_offset = 0;
             // Set material properties
@@ -118,18 +120,21 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
             // Store coefficients for raytracing
             m_materials.emplace_back(k_d, k_s, n_s, k_e);
         }
-        auto& object_va = curr_object->va;
+        auto& object_va  = curr_object->va;
+        auto& object_ebo = curr_object->ebo;
         // Load mesh
-        object_va.loadAttrData(0, s->mesh.positions);
-        m_geom_va.loadAttrData(0, s->mesh.positions);
-        object_va.loadAttrData(1, s->mesh.normals);
+        object_va.loadData(0, s->mesh.positions);
+        m_geom_va.loadData(0, s->mesh.positions);
+        object_va.loadData(1, s->mesh.normals);
         // Load indexing information
-        object_va.loadIndexData(s->mesh.indices, object_offset);
-        m_geom_va.loadIndexData(s->mesh.indices, global_offset);
+        object_ebo.loadData(s->mesh.indices, object_offset);
+        m_geom_ebo.loadData(s->mesh.indices, global_offset);
         if (shapes.end() == s + 1) {
             // Don't forget to buffer after the last shape
             object_va.buffer();
             m_geom_va.buffer();
+            object_ebo.buffer();
+            m_geom_ebo.buffer();
         }
         // Fill vectors for raytracing
         const uint start_idx{static_cast<uint>(m_vertices.size())};
@@ -157,8 +162,9 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
     m_kd_tree = std::make_unique<rt::KdTri>(m_triangles, 10, 1, 30, 2);
 }
 
-Scene::Object::Object(GLVertArray&& va, GLUniformBuffer&& ubo):
-               va{std::forward<GLVertArray>(va)}, ubo{std::forward<GLUniformBuffer>(ubo)} {}
+Scene::Object::Object(GLVertArray&& va, GLElementBuffer&& ebo, GLUniformBuffer&& ubo):
+               va{std::forward<GLVertArray>(va)}, ebo{std::forward<GLElementBuffer>(ebo)},
+               ubo{std::forward<GLUniformBuffer>(ubo)} {}
 
 void Scene::addFog(const char* const dens_file_name, const char* const pi_dens_file_name,
                    const float maj_ext_k, const float abs_k, const float sca_k,
@@ -250,11 +256,11 @@ BBox::IntDist Scene::traceFog(const rt::Ray& ray) const {
 
 void Scene::render(const bool ignore_materials) const {
     if (ignore_materials) {
-        m_geom_va.draw();
+        m_geom_ebo.draw(m_geom_va);
     } else {
         for (const auto& obj : m_objects) {
             obj.ubo.bind(UB_MAT_INFO);
-            obj.va.draw();
+            obj.ebo.draw(obj.va);
         }
     }
 }

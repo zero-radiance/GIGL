@@ -119,6 +119,7 @@
     <ClCompile Include="Source\Fog\DensityField.cpp" />
     <ClCompile Include="Source\Fog\FogVolume.cpp" />
     <ClCompile Include="Source\GIGL.cpp" />
+    <ClCompile Include="Source\GL\GLElementBuffer.cpp" />
     <ClCompile Include="Source\GL\GLShader.cpp" />
     <ClCompile Include="Source\GL\GLTextureBuffer.cpp" />
     <ClCompile Include="Source\GL\GLUniformBuffer.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="Source\Common\Utility.hpp" />
     <ClInclude Include="Source\Fog\DensityField.h" />
     <ClInclude Include="Source\Fog\FogVolume.h" />
+    <ClInclude Include="Source\GL\GLElementBuffer.h" />
     <ClInclude Include="Source\GL\GLPersistentBuffer.h" />
     <ClInclude Include="Source\GL\GLPersistentBuffer.hpp" />
     <ClInclude Include="Source\GL\GLShader.h" />
