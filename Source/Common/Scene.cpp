@@ -39,8 +39,8 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
     std::sort(shapes.begin(), shapes.end(), cmp_shapes_by_material);
     // Process loaded shapes and transform them to objects
     // Combine them by materials
-    uint global_offset{0};
-    uint object_offset{0};
+    uint global_vert_offset{0};
+    uint object_vert_offset{0};
     Object* curr_object{nullptr};
     const std::string* curr_mat_name{nullptr};
     for (auto s = shapes.begin(); s != shapes.end(); ++s) {
@@ -96,7 +96,7 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
             GLUniformBuffer ubo{"MaterialInfo", n_mat_attr, mat_attr_names, prog_handle};
             m_objects.emplace_back(std::move(va), std::move(ebo), std::move(ubo));
             curr_object = &m_objects[m_objects.size() - 1];
-            object_offset = 0;
+            object_vert_offset = 0;
             // Set material properties
             vec3 rho_d{s->material.diffuse[0], s->material.diffuse[1], s->material.diffuse[2]};
             vec3 rho_s{s->material.specular[0], s->material.specular[1], s->material.specular[2]};
@@ -127,8 +127,8 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
         m_geom_va.loadData(0, s->mesh.positions);
         object_va.loadData(1, s->mesh.normals);
         // Load indexing information
-        object_ebo.loadData(s->mesh.indices, object_offset);
-        m_geom_ebo.loadData(s->mesh.indices, global_offset);
+        object_ebo.loadData(s->mesh.indices, object_vert_offset);
+        m_geom_ebo.loadData(s->mesh.indices, global_vert_offset);
         if (shapes.end() == s + 1) {
             // Don't forget to buffer after the last shape
             object_va.buffer();
@@ -155,8 +155,8 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
                                 start_idx + s->mesh.indices[k + 2]};
             m_triangles.emplace_back(vert, static_cast<uint>(m_materials.size() - 1));
         }
-        object_offset += vert_count;
-        global_offset += vert_count;
+        object_vert_offset += vert_count;
+        global_vert_offset += vert_count;
     }
     // Build acceleration structure
     m_kd_tree = std::make_unique<rt::KdTri>(m_triangles, 10, 1, 30, 2);
