@@ -72,6 +72,7 @@ void GLElementBuffer::loadData(const std::vector<GLuint>& data_vec, const GLuint
 
 void GLElementBuffer::loadData(const size_t n_elems, const GLuint* const data,
                                const GLuint offset) {
+    m_data_vec.reserve(m_data_vec.size() + n_elems);
     for (auto i = 0; i < n_elems; ++i) {
         const GLuint idx{offset + data[i]};
         m_min_idx = min(m_min_idx, idx);

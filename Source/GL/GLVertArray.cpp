@@ -151,9 +151,8 @@ void GLVertArray::loadData(const GLuint attr_id, const std::vector<GLfloat>& dat
 
 void GLVertArray::loadData(const GLuint attr_id, const size_t n_elems,
                                const GLfloat* const data) {
-    for (auto i = 0; i < n_elems; ++i) {
-        m_vbos[attr_id].data_vec.push_back(data[i]);
-    }
+    m_vbos[attr_id].data_vec.reserve(m_vbos[attr_id].data_vec.size() + n_elems);
+    m_vbos[attr_id].data_vec.insert(m_vbos[attr_id].data_vec.end(), data, data + n_elems);
     m_is_buffered = false;
 }
 
