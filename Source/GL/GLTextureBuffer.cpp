@@ -20,6 +20,10 @@ GLTextureBuffer::GLTextureBuffer(GLTextureBuffer&& tbo): m_handle{tbo.m_handle},
 }
 
 GLTextureBuffer& GLTextureBuffer::operator=(GLTextureBuffer&& tbo) {
+    // Destroy the old buffer
+    gl::DeleteTextures(1, &m_tex_handle);
+    gl::DeleteBuffers(1, &m_handle);
+    // Now copy the data
     memcpy(this, &tbo, sizeof(*this));
     // Mark as moved
     tbo.m_handle = 0;

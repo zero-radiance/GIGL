@@ -30,6 +30,11 @@ GLPersistentBuffer<T>::GLPersistentBuffer(const GLPersistentBuffer& pbo): m_byte
 
 template <GLenum T>
 GLPersistentBuffer<T>& GLPersistentBuffer<T>::operator=(const GLPersistentBuffer& pbo) {
+    // Destroy the old buffer
+    // Technically, it may be possible to reuse it, but
+    // destroying it and creating a new one is simpler and faster
+    destroy();
+    // Now copy the data
     m_byte_sz = pbo.m_byte_sz;
     gl::GenBuffers(1, &m_handle);
     // Allocate buffer on GPU
@@ -54,6 +59,11 @@ GLPersistentBuffer<T>::GLPersistentBuffer(GLPersistentBuffer&& pbo): m_buffer{pb
 
 template <GLenum T>
 GLPersistentBuffer<T>& GLPersistentBuffer<T>::operator=(GLPersistentBuffer&& pbo) {
+    // Destroy the old buffer
+    // Technically, it may be possible to reuse it, but
+    // destroying it and creating a new one is simpler and faster
+    destroy();
+    // Now copy the data
     memcpy(this, &pbo, sizeof(*this));
     // Mark as moved
     pbo.m_handle = 0;
@@ -64,10 +74,15 @@ template <GLenum T>
 GLPersistentBuffer<T>::~GLPersistentBuffer() {
     // Check if it was moved
     if (m_handle) {
-        gl::BindBuffer(T, m_handle);
-        gl::UnmapBuffer(T);
-        gl::DeleteBuffers(1, &m_handle);
+        destroy();
     }
+}
+
+template <GLenum T>
+void GLPersistentBuffer<T>::destroy() {
+    gl::BindBuffer(T, m_handle);
+    gl::UnmapBuffer(T);
+    gl::DeleteBuffers(1, &m_handle);
 }
 
 template <GLenum T>

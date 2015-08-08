@@ -100,6 +100,9 @@
     <ClCompile Include="Source\GL\GLTextureBuffer.cpp">
       <Filter>GL</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GL\GLElementBuffer.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Include\TinyOBJ\tiny_obj_loader.h">
@@ -226,6 +229,9 @@
       <Filter>Common</Filter>
     </ClInclude>
     <ClInclude Include="Source\GL\GLTextureBuffer.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLElementBuffer.h">
       <Filter>GL</Filter>
     </ClInclude>
   </ItemGroup>

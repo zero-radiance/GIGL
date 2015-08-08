@@ -24,9 +24,8 @@ namespace rt {
                 break;
             default:						// Two or more primitives
                 prims_offset = static_cast<uint>(leaf_prim_ids.size());
-                for (uint i = 0; i < n_prims; ++i) {
-                    leaf_prim_ids.push_back(overlap_prim_ids[i]);
-                }
+                leaf_prim_ids.insert(leaf_prim_ids.end(), overlap_prim_ids,
+                                     overlap_prim_ids + n_prims);
         }
     }
 

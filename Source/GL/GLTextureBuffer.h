@@ -13,6 +13,6 @@ public:
     explicit GLTextureBuffer(const GLenum tex_unit, const GLenum tex_intern_fmt,
                              const GLsizeiptr byte_sz, const void* const data);
 private:
-    GLuint m_handle;        // Unique OpenGL buffer handle
-    GLuint m_tex_handle;    // Unique OpenGL texture handle
+    GLuint m_handle;        // OpenGL buffer handle
+    GLuint m_tex_handle;    // OpenGL texture handle
 };

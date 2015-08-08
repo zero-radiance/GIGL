@@ -5,13 +5,13 @@
 
 class GLSLProgram;
 
-/* OpenGL Uniform Manager class for N uniforms */
+/* OpenGL uniform manager class for N uniforms */
 template <int N>
 class GLUniformManager {
 public:
     GLUniformManager() = delete;
     RULE_OF_ZERO(GLUniformManager);
-    // Constructor, takes GLSL program handle and list of uniform names as arguments
+    // Constructor, takes an GLSL program's reference and a list of uniform names as arguments
     GLUniformManager(const GLSLProgram& sp, std::initializer_list<const char*> args);
     // Sets uniform values; use THE SAME order and count as in the constructor!
     template <typename... Args>

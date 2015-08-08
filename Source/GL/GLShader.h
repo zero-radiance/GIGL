@@ -16,7 +16,7 @@ public:
     void link();
     // Activates GSLS program
     void use() const;
-    // Returns program's unique handle
+    // Returns program's OpenGL handle
     GLuint id() const;
     // Returns true if program status is OK
     bool isValid() const;
@@ -42,7 +42,7 @@ private:
         RULE_OF_FIVE(GLSLShader);
         // Creates a shader from a file on disk
         explicit GLSLShader(const char* const file_name);
-        // Returns shader's unique handle
+        // Returns shader's OpenGL handle
         GLuint id() const;
         // Returns true if shader status is OK
         bool isValid() const;
@@ -52,13 +52,13 @@ private:
         // Performs shader compilation
         void compile();
         // Private data members
-        GLuint m_handle;                    // Unique OpenGL handle
+        GLuint m_handle;                    // OpenGL handle
         bool   m_is_ok;                     // Status
     };
     // Attaches (valid) shader to the shader program
     void attachShader(const GLSLShader& sh);
     // Private data members
-    GLuint			        m_handle;       // Unique OpenGL handle
+    GLuint			        m_handle;       // OpenGL handle
     bool					m_is_ok;        // Status
     bool                    m_is_linked;    // Program linking status
     std::vector<GLSLShader> m_shaders;      // Attached shaders

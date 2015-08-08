@@ -43,6 +43,11 @@ GLUniformBuffer::GLUniformBuffer(const GLUniformBuffer& ubo): m_n_members{ubo.m_
 
 GLUniformBuffer& GLUniformBuffer::operator=(const GLUniformBuffer& ubo) {
     if (this != &ubo) {
+        // Destroy the old buffer
+        // Technically, it may be possible to reuse it, but
+        // destroying it and creating a new one is simpler and faster
+        destroy();
+        // Now copy the data
         m_n_members    = ubo.m_n_members;
         m_block_sz     = ubo.m_block_sz;
         m_block_buffer = new GLubyte[m_block_sz];
@@ -69,6 +74,11 @@ GLUniformBuffer::GLUniformBuffer(GLUniformBuffer&& ubo): m_handle{ubo.m_handle},
 
 GLUniformBuffer& GLUniformBuffer::operator=(GLUniformBuffer&& ubo) {
     assert(this != &ubo);
+    // Destroy the old buffer
+    // Technically, it may be possible to reuse it, but
+    // destroying it and creating a new one is simpler and faster
+    destroy();
+    // Now copy the data
     memcpy(this, &ubo, sizeof(*this));
     // Mark as moved
     ubo.m_handle = 0;
@@ -78,10 +88,14 @@ GLUniformBuffer& GLUniformBuffer::operator=(GLUniformBuffer&& ubo) {
 GLUniformBuffer::~GLUniformBuffer() {
     // Check if it was moved
     if (m_handle) {
-        delete[] m_block_buffer;
-        delete[] m_offsets;
-        gl::DeleteBuffers(1, &m_handle);
+        destroy();
     }
+}
+
+void GLUniformBuffer::destroy() {
+    delete[] m_block_buffer;
+    delete[] m_offsets;
+    gl::DeleteBuffers(1, &m_handle);
 }
 
 GLint GLUniformBuffer::calcStructStride(const GLint init_struct_cnt) const {

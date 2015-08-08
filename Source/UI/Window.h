@@ -25,6 +25,9 @@ public:
     // Returns a pointer to GLFWwindow
     GLFWwindow* get() const;
 private:
+    // Performs window destruction
+    void destroy();
+    // Private data members
     GLFWwindow* m_window;           // Pointer to GLFW window
     GLsizei		m_res_x, m_res_y;   // Resolution in x, y
     GLuint		m_tex_handle;       // OpenGL accumulation texture handle

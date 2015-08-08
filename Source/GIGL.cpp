@@ -89,6 +89,7 @@ int main(int, char**) {
     sp.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
     sp.setUniformValue("fog_bounds[0]",   fog_pt_min);
     sp.setUniformValue("fog_bounds[1]",   fog_pt_max);
+    sp.setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
     sp.setUniformValue("model_mat",       model_mat);
     sp.setUniformValue("MVP",             MVP);
     sp.setUniformValue("norm_mat",        norm_mat);
@@ -121,7 +122,6 @@ int main(int, char**) {
             rt::PhotonTracer::trace(prim_pl, shoot_dir, params.max_num_vpls, vpls);
             // Disable GI on VPL tracing failure
             params.gi_enabled = params.gi_enabled && !vpls.isEmpty();
-            if (vpls.size() < params.max_num_vpls) printError("VPL tracing problems.");
         }
         // Generate shadow maps
         gl::CullFace(gl::FRONT);

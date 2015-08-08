@@ -6,6 +6,7 @@
 #include "..\RT\RTBase.h"
 #include "..\RT\KdTree.h"
 #include "..\GL\GLVertArray.h"
+#include "..\GL\GLElementBuffer.h"
 #include "..\GL\GLUniformBuffer.h"
 
 class Scene {
@@ -49,11 +50,13 @@ public:
 private:
     /* OpenGL representation of a scene object */
     struct Object {
-        explicit Object(GLVertArray&& va, GLUniformBuffer&& ubo);
+        explicit Object(GLVertArray&& va, GLElementBuffer&& ebo, GLUniformBuffer&& ubo);
         GLVertArray		va;
+        GLElementBuffer ebo;
         GLUniformBuffer ubo;
     };
     GLVertArray			           m_geom_va;       // Contains vertices of the entire scene
+    GLElementBuffer                m_geom_ebo;      // Contains triangles of the entire scene
     std::vector<Object>            m_objects;       // All objects, combined by material
     std::unique_ptr<FogVolume>     m_fog_vol;       // Heterogeneous fog (if present)
     bool                           m_fog_enabled;   // Flag to toggle fog on/off
