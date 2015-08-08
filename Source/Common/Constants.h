@@ -57,4 +57,4 @@
 /* Misc. OpenGL definitions */
 #define GL_FALSE		0				// gl::FALSE_
 #define GL_TRUE			1				// gl::TRUE_
-#define DEFAULT_FBO		0				// Rendering framebuffer handle
+#define DEFAULT_FBO		0				// Rendering framebuffer OpenGL handle

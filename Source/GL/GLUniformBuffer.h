@@ -30,7 +30,7 @@ private:
     // Performs buffer destruction
     void destroy();
     // Private data members
-    GLuint	 m_handle;		    // Unique OpenGL handle
+    GLuint	 m_handle;		    // OpenGL handle
     GLuint   m_n_members;       // Number of buffer data members
     GLint	 m_block_sz;        // Uniform block size in bytes
     GLubyte* m_block_buffer;    // Block buffer contents

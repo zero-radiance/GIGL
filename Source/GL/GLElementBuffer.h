@@ -20,7 +20,7 @@ public:
     // Draws indexed vertex array
     void draw(const GLVertArray& va) const;
 private:
-    GLuint m_handle;                    // Unique OpenGL handle
+    GLuint m_handle;                    // OpenGL handle
     GLuint m_min_idx, m_max_idx;        // Minimal and maximal indices
     bool   m_is_buffered;               // Flag indicating whether data is buffered on GPU
     std::vector<GLuint> m_data_vec;     // Storage

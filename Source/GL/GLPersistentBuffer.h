@@ -24,7 +24,7 @@ private:
     // Private data members
     void*  m_buffer;     // Pointer used to write to the buffer
     size_t m_byte_sz;    // Buffer size in bytes
-    GLuint m_handle;     // Unique OpenGL handle
+    GLuint m_handle;     // OpenGL handle
 };
 
 using GLPSB430 = GLPersistentBuffer<gl::SHADER_STORAGE_BUFFER>;
