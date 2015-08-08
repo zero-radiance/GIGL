@@ -234,6 +234,12 @@
     <ClInclude Include="Source\GL\GLElementBuffer.h">
       <Filter>GL</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GL\GLTexture2D.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLTexture2D.hpp">
+      <Filter>GL</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source\Shaders\Render.frag">

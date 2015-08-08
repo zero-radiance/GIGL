@@ -152,6 +152,8 @@
     <ClInclude Include="Source\GL\GLPersistentBuffer.hpp" />
     <ClInclude Include="Source\GL\GLShader.h" />
     <ClInclude Include="Source\GL\GLShader.hpp" />
+    <ClInclude Include="Source\GL\GLTexture2D.h" />
+    <ClInclude Include="Source\GL\GLTexture2D.hpp" />
     <ClInclude Include="Source\GL\GLTextureBuffer.h" />
     <ClInclude Include="Source\GL\GLUniformBuffer.h" />
     <ClInclude Include="Source\GL\GLUniformManager.h" />
