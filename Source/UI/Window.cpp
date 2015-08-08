@@ -174,9 +174,9 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
     // No filtering
     gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
     gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
-    // Use edge-clamping for both dimensions
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE);
+    // Use border-clamping for both dimensions
+    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_BORDER);
+    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_BORDER);
 }
 
 Window::Window(Window&& wnd): m_window{wnd.m_window}, m_res_x{wnd.m_res_x}, m_res_y{wnd.m_res_y},
