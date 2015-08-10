@@ -124,7 +124,7 @@
     <ClCompile Include="Source\GL\GLTextureBuffer.cpp" />
     <ClCompile Include="Source\GL\GLUniformBuffer.cpp" />
     <ClCompile Include="Source\GL\GLVertArray.cpp" />
-    <ClCompile Include="Source\GL\RTBLockMngr.cpp" />
+    <ClCompile Include="Source\GL\GLRTBLockMngr.cpp" />
     <ClCompile Include="Source\Include\OpenGL\gl_core_4_4.cpp" />
     <ClCompile Include="Source\Include\TinyOBJ\tiny_obj_loader.cc" />
     <ClCompile Include="Source\RT\PhotonTracer.cpp" />
@@ -159,7 +159,7 @@
     <ClInclude Include="Source\GL\GLUniformManager.h" />
     <ClInclude Include="Source\GL\GLUniformManager.hpp" />
     <ClInclude Include="Source\GL\GLVertArray.h" />
-    <ClInclude Include="Source\GL\RTBLockMngr.h" />
+    <ClInclude Include="Source\GL\GLRTBLockMngr.h" />
     <ClInclude Include="Source\Include\GLFW\glfw3.h" />
     <ClInclude Include="Source\Include\GLFW\glfw3native.h" />
     <ClInclude Include="Source\Include\GLM\common.hpp" />

@@ -1,16 +1,16 @@
-#include "RTBLockMngr.h"
+#include "GLRTBLockMngr.h"
 #include <cassert>
 #include <OpenGL\gl_core_4_4.hpp>
 
-RTBLockMngr::RingTripleBufferLockManager(): m_buf_idx{0}, m_fences{} {}
+GLRTBLockMngr::GLRingTripleBufferLockManager(): m_buf_idx{0}, m_fences{} {}
 
-RTBLockMngr::RingTripleBufferLockManager(RTBLockMngr&& rtb_lock_mngr):
+GLRTBLockMngr::GLRingTripleBufferLockManager(GLRTBLockMngr&& rtb_lock_mngr):
              m_buf_idx{rtb_lock_mngr.m_buf_idx}, m_fences(rtb_lock_mngr.m_fences) {
     // Mark as moved
     rtb_lock_mngr.m_buf_idx = -1;
 }
 
-RTBLockMngr& RTBLockMngr::operator=(RTBLockMngr&& rtb_lock_mngr) {
+GLRTBLockMngr& GLRTBLockMngr::operator=(GLRTBLockMngr&& rtb_lock_mngr) {
     assert(this != &rtb_lock_mngr);
     // Remove the old fences if needed
     for (int i = 0; i < 3; ++i) {
@@ -23,7 +23,7 @@ RTBLockMngr& RTBLockMngr::operator=(RTBLockMngr&& rtb_lock_mngr) {
     return *this;
 }
 
-RTBLockMngr::~RingTripleBufferLockManager() {
+GLRTBLockMngr::~GLRingTripleBufferLockManager() {
     // Check if it was moved
     if (m_buf_idx >= 0) {
         for (int i = 0; i < 3; ++i) {
@@ -32,7 +32,7 @@ RTBLockMngr::~RingTripleBufferLockManager() {
     }
 }
 
-void RTBLockMngr::lockBuffer() {
+void GLRTBLockMngr::lockBuffer() {
     auto& curr_fence = m_fences[m_buf_idx];
     if (curr_fence) {
         // Release memory
@@ -44,7 +44,7 @@ void RTBLockMngr::lockBuffer() {
     m_buf_idx = (m_buf_idx + 1) % 3;
 }
 
-void RTBLockMngr::waitForLockExpiration() {
+void GLRTBLockMngr::waitForLockExpiration() {
     const auto& curr_fence = m_fences[m_buf_idx];
     if (curr_fence) {
         GLbitfield wait_flags   = 0;

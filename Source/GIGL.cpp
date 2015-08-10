@@ -11,8 +11,9 @@
 #include "VPL\PointLight.hpp"
 #include "GL\GLShader.hpp"
 #include "GL\GLTextureBuffer.h"
-#include "GL\RTBLockMngr.h"
+#include "GL\GLRTBLockMngr.h"
 #include "GL\GLUniformManager.hpp"
+#include "GL\GLTexture2D.hpp"
 #include "UI\InputHandler.h"
 #include "UI\Window.h"
 
@@ -103,7 +104,7 @@ int main(int, char**) {
                                           "n_vpls", "sca_k", "ext_k", "sca_albedo",
                                           "tri_buf_idx"}};
     // Create ring-triple-buffer lock manager
-    RTBLockMngr rtb_lock_mngr;
+    GLRTBLockMngr rtb_lock_mngr;
     /* Rendering loop */
     while (!window.shouldClose()) {
         // Start frame timing
