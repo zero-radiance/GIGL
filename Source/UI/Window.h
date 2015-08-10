@@ -11,7 +11,7 @@ public:
     Window() = delete;
     RULE_OF_FIVE_NO_COPY(Window);
     // Constructs a window with specified resolution
-    Window(const int res_x, const int res_y);
+    explicit Window(const int res_x, const int res_y);
     // Returns true if window has been opened successfully
     const bool isOpen() const;
     // Clears window and associated buffers
