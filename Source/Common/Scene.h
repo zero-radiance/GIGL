@@ -12,7 +12,7 @@
 class Scene {
 public:
     Scene();
-    RULE_OF_ZERO(Scene);
+    RULE_OF_ZERO_NO_COPY(Scene);
     // Loads objects from *.obj file
     void loadObjects(const char* const file_name, const GLuint prog_handle);
     // Creates fog around the whole scene

@@ -1,17 +1,18 @@
 #include "InputHandler.h"
 #include <GLFW\glfw3.h>
-#include "..\Common\Constants.h"
 #include "..\Common\Timer.h"
+#include "..\Common\Constants.h"
+#include "..\Common\Renderer.h"
 #include "..\Common\Scene.h"
 
 using glm::vec3;
 
 extern Scene* scene;
 
-RenderParams* InputHandler::m_params;
+RenderSettings* InputHandler::m_params;
 uint InputHandler::m_last_time_ms;
 
-void InputHandler::init(RenderParams* params) {
+void InputHandler::init(RenderSettings* params) {
     m_params = params;
     reset();
 }

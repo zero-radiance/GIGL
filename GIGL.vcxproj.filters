@@ -103,6 +103,9 @@
     <ClCompile Include="Source\GL\GLRTBLockMngr.cpp">
       <Filter>GL</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Common\Renderer.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Include\TinyOBJ\tiny_obj_loader.h">
@@ -239,6 +242,9 @@
     </ClInclude>
     <ClInclude Include="Source\GL\GLRTBLockMngr.h">
       <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Renderer.h">
+      <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

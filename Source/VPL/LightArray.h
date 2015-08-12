@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GLM\fwd.hpp>
 #include "..\GL\GLPersistentBuffer.h"
 
 /* Array of Point Lights */
@@ -13,10 +12,12 @@ public:
     LightArray(const int max_n_lights);
     // Returns size of PL array
     int size() const;
-    // Returns PL reference from array
+    // Returns a mutable PL reference from array
+    PL& operator[](const int index);
+    // Returns a const PL reference from array
     const PL& operator[](const int index) const;
     // Resets the size of the array, effectively clearing it
-    void reset();
+    void clear();
     // Returns true if array contains 0 lights
     bool isEmpty() const;
     // Adds a single PL to array

@@ -14,14 +14,21 @@ int LightArray<PL>::size() const {
 }
 
 template <class PL>
-const PL& LightArray<PL>::operator[](const int index) const {
+PL& LightArray<PL>::operator[](const int index) {
     assert(index < m_sz);
-    const PL* pls{data()};
+    PL* const pls{data()};
     return pls[index];
 }
 
 template <class PL>
-void LightArray<PL>::reset() {
+const PL& LightArray<PL>::operator[](const int index) const {
+    assert(index < m_sz);
+    const PL* const pls{data()};
+    return pls[index];
+}
+
+template <class PL>
+void LightArray<PL>::clear() {
     m_sz = 0;
 }
 

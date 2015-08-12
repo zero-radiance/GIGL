@@ -114,6 +114,7 @@
     <ClCompile Include="Source\Common\BBox.cpp" />
     <ClCompile Include="Source\Common\Camera.cpp" />
     <ClCompile Include="Source\Common\Random.cpp" />
+    <ClCompile Include="Source\Common\Renderer.cpp" />
     <ClCompile Include="Source\Common\Scene.cpp" />
     <ClCompile Include="Source\Common\Timer.cpp" />
     <ClCompile Include="Source\Fog\DensityField.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="Source\Common\Halton.hpp" />
     <ClInclude Include="Source\Common\Interpolation.hpp" />
     <ClInclude Include="Source\Common\Random.h" />
+    <ClInclude Include="Source\Common\Renderer.h" />
     <ClInclude Include="Source\Common\Scene.h" />
     <ClInclude Include="Source\Common\Timer.h" />
     <ClInclude Include="Source\Common\Utility.hpp" />
