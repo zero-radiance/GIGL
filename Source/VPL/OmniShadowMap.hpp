@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OmniShadowMap.h"
+#include <GLM\gtc\matrix_transform.hpp>
 #include "..\Common\Scene.h"
 #include "LightArray.hpp"
 
@@ -14,7 +15,8 @@ void OmniShadowMap::generate(const Scene& scene, const LightArray<PL>& la,
     gl::Viewport(0, 0, m_res, m_res);
     gl::UniformMatrix4fv(UL_SM_MODELMAT, 1, GL_FALSE, &model_mat[0][0]);
     gl::Uniform1f(UL_SM_INVMAXD2, m_inv_max_dist_sq);
-    const GLsizei n{min(m_max_vpls, la.size())};
+    assert(la.size() <= m_max_vpls);
+    const GLsizei n{la.size()};
     for (GLsizei i = 0; i < n; ++i) {
         const glm::vec3& light_w_pos{la[i].wPos()};
         const glm::mat4  light_inv_trans{glm::translate(glm::mat4{1.0f}, -light_w_pos)};
