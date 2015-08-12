@@ -2,11 +2,9 @@
 #include <OpenGL\gl_core_4_4.hpp>
 #include <GLM\detail\func_common.hpp>
 
-using glm::max;
-
 // Computes the number of MIP-map levels given the texture dimensions
 static inline GLsizei computeMipLvlCnt(const GLsizei width, const GLsizei height) {
-    return static_cast<GLsizei>(floor(log2(max(width, height))) + 1);
+    return static_cast<GLsizei>(floor(log2(glm::max(width, height))) + 1);
 }
 
 template <GLenum SIF>
