@@ -11,7 +11,8 @@ GLUniformBuffer::GLUniformBuffer(const char* const block_name, const GLuint n_me
     // Query for block index
     const GLuint block_id{gl::GetUniformBlockIndex(prog_handle, block_name)};
     // Query for block size
-    gl::GetActiveUniformBlockiv(prog_handle, block_id, gl::UNIFORM_BLOCK_DATA_SIZE, &m_block_sz);
+    gl::GetActiveUniformBlockiv(prog_handle, block_id, gl::UNIFORM_BLOCK_DATA_SIZE,
+                                reinterpret_cast<GLint*>(&m_block_sz));
     // Allocate buffer on GPU
     gl::BindBuffer(gl::UNIFORM_BUFFER, m_handle);
     gl::BufferData(gl::UNIFORM_BUFFER, m_block_sz, nullptr, gl::DYNAMIC_DRAW);
@@ -122,6 +123,7 @@ void GLUniformBuffer::buffer(const GLuint* const elem_byte_sz, const void* const
 }
 
 void GLUniformBuffer::buffer(const GLuint data_byte_sz, const void* const data) {
+    assert(data_byte_sz <= m_block_sz);
     memcpy(m_block_buffer, data, data_byte_sz);
     buffer();
 }
