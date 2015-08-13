@@ -1,5 +1,4 @@
 #include "GLTexture2D.h"
-#include <OpenGL\gl_core_4_4.hpp>
 #include <GLM\detail\func_common.hpp>
 
 // Computes the number of MIP-map levels given the texture dimensions
@@ -15,7 +14,7 @@ GLTexture2D<SIF>::GLTexture2D(const GLenum tex_unit, const GLsizei width, const 
     gl::GenTextures(1, &m_handle);
     gl::BindTexture(gl::TEXTURE_2D, m_handle);
     // Compute the number of MIP-map levels
-    const GLsizei levels{use_mipmaps ? computeMipLvlCnt(width, height) : 0};
+    const GLsizei levels{use_mipmaps ? computeMipLvlCnt(width, height) : 1};
     // Allocate storage
     gl::TexStorage2D(gl::TEXTURE_2D, levels, SIF, width, height);
     // Set texture filering

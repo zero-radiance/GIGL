@@ -1,5 +1,5 @@
 #pragma once
-#include <OpenGL\gl_basic_typedefs.h>
+#include <OpenGL\gl_core_4_4.hpp>
 #include "..\Common\Definitions.h"
 
 /* Implements 2D OpenGL texture of the specified Sized Internal Format */
@@ -19,6 +19,7 @@ private:
 };
 
 using GLTex2D_3x8   = GLTexture2D<gl::RGB8>;
+using GLTex2D_1x8UI = GLTexture2D<gl::R8UI>;
 using GLTex2D_1x32F = GLTexture2D<gl::R32F>;
 using GLTex2D_2x32F = GLTexture2D<gl::RG32F>;
 using GLTex2D_3x32F = GLTexture2D<gl::RGB32F>;
