@@ -19,8 +19,8 @@ static inline void keyCallback(GLFWwindow* const wnd, const int key, const int,
 static inline void APIENTRY debugCallback(const GLenum source, const GLenum type, const GLuint id,
                                           const GLenum severity, const GLsizei,
                                           const GLchar* const msg, const void* const) {
-    // Remove "Buffer detailed info" spam
-    if (strstr(msg, "Buffer detailed info")) return;
+    // Remove "detailed info" spam
+    if (strstr(msg, "detailed info")) return;
     // Convert Enums to strings
     char src_str[15];
     switch (source) {
