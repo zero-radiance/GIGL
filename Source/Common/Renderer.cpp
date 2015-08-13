@@ -21,6 +21,11 @@ DeferredRenderer::DeferredRenderer():
     GLfloat hal_seq[seq_sz];
     HaltonSG::generate<2>(hal_seq);
     m_hal_tbo.bufferData(sizeof(hal_seq), hal_seq);
+    // Load shadow map generating program
+    m_sp_osm.loadShader("Source\\Shaders\\Shadow.vert");
+    m_sp_osm.loadShader("Source\\Shaders\\Shadow.geom");
+    m_sp_osm.loadShader("Source\\Shaders\\Shadow.frag");
+    m_sp_osm.link();
     // Load shaders which fill the G-buffer
     // ... TODO
     // Load shaders which perform shading
@@ -56,6 +61,7 @@ void DeferredRenderer::updateLights(const Scene& scene, const vec3& target,
 void DeferredRenderer::generateShadowMaps(const Scene& scene, const mat4& model_mat,
                                           const LightArray<PPL>& ppls,
                                           const LightArray<VPL>& vpls) const {
+    m_sp_osm.use();
     gl::CullFace(gl::FRONT);
     m_ppl_OSM.generate(scene, ppls, model_mat);
     if (settings.gi_enabled) m_vpl_OSM.generate(scene, vpls, model_mat);

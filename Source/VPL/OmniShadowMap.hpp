@@ -8,7 +8,6 @@
 template <class PL>
 void OmniShadowMap::generate(const Scene& scene, const LightArray<PL>& la,
                              const glm::mat4& model_mat) const {
-    m_sm_prog.use();
     // Set non-light-specific parameters
     gl::BindFramebuffer(gl::FRAMEBUFFER, m_fbo_handle);
     gl::Clear(gl::DEPTH_BUFFER_BIT);

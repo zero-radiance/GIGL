@@ -49,8 +49,9 @@ public:
     // Public data members
     RenderSettings settings;            // Rendering parameters updated by InputHandler
 private:
-    //GLSLProgram         m_sp_geom;      // GLSL shader program which fills a G-buffer
-    GLSLProgram         m_sp_shade;     // GLSL shader program which performs shading
+    //GLSLProgram         m_sp_geom;    // GLSL program which fills a G-buffer
+    GLSLProgram         m_sp_osm;       // GLSL program which generates omnidir. shadow maps
+    GLSLProgram         m_sp_shade;     // GLSL program which performs shading
     GLUniformManager<9> m_uniform_mngr; // OpenGL uniform manager
     OmniShadowMap       m_ppl_OSM;      // Omnidirectional shadow map for primary lights
     OmniShadowMap       m_vpl_OSM;      // Omnidirectional shadow map for VPLs

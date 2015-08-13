@@ -1,8 +1,9 @@
 #pragma once
 
 #include <array>
+#include <OpenGL\gl_basic_typedefs.h>
 #include <GLM\mat4x4.hpp>
-#include "..\GL\GLShader.h"
+#include "..\Common\Definitions.h"
 
 class Scene;
 template <class PL> class LightArray;
@@ -27,7 +28,6 @@ private:
     // Creates a framebuffer for depth map rendering
     void createFramebuffer();
     // Private data members
-    GLSLProgram              m_sm_prog;          // GLSL program which generates shadow maps
     std::array<glm::mat4, 6> m_view_proj;        // Projection * View matrices, 1 for each face
     int			             m_tex_unit;         // OpenGL texture unit id
     GLsizei		             m_res;              // Shadow map texture resolution: res x res

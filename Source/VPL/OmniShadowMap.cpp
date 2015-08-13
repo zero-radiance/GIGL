@@ -46,23 +46,18 @@ OmniShadowMap::OmniShadowMap(const GLsizei res, const GLsizei max_vpls, const fl
     for (int f = 0; f < 6; ++f) {
         m_view_proj[f] = proj_mat * calcCubeViewMat(f);
     }
-    // Load shadow map generating program
-    m_sm_prog.loadShader("Source\\Shaders\\Shadow.vert");
-    m_sm_prog.loadShader("Source\\Shaders\\Shadow.geom");
-    m_sm_prog.loadShader("Source\\Shaders\\Shadow.frag");
-    m_sm_prog.link();
+    
 }
 
-OmniShadowMap::OmniShadowMap(const OmniShadowMap& osm): m_sm_prog{osm.m_sm_prog},
-               m_view_proj(osm.m_view_proj), m_tex_unit{osm.m_tex_unit}, m_res{osm.m_res},
-               m_max_vpls{osm.m_max_vpls}, m_inv_max_dist_sq{osm.m_inv_max_dist_sq} {
+OmniShadowMap::OmniShadowMap(const OmniShadowMap& osm): m_view_proj(osm.m_view_proj),
+               m_tex_unit{osm.m_tex_unit}, m_res{osm.m_res}, m_max_vpls{osm.m_max_vpls},
+               m_inv_max_dist_sq{osm.m_inv_max_dist_sq} {
     createDepthTexture();
     createFramebuffer();
 }
 
 OmniShadowMap& OmniShadowMap::operator=(const OmniShadowMap& osm) {
     if (this != &osm) {
-        m_sm_prog         = osm.m_sm_prog;
         m_view_proj       = osm.m_view_proj;
         m_tex_unit        = osm.m_tex_unit;
         m_res             = osm.m_res;
@@ -74,10 +69,10 @@ OmniShadowMap& OmniShadowMap::operator=(const OmniShadowMap& osm) {
     return *this;
 }
 
-OmniShadowMap::OmniShadowMap(OmniShadowMap&& osm): m_sm_prog{osm.m_sm_prog},
-               m_view_proj(osm.m_view_proj), m_tex_unit{osm.m_tex_unit}, m_res{osm.m_res},
-               m_max_vpls{osm.m_max_vpls}, m_inv_max_dist_sq{osm.m_inv_max_dist_sq},
-               m_fbo_handle{osm.m_fbo_handle}, m_cube_tex_handle{osm.m_cube_tex_handle} {
+OmniShadowMap::OmniShadowMap(OmniShadowMap&& osm): m_view_proj(osm.m_view_proj),
+               m_tex_unit{osm.m_tex_unit}, m_res{osm.m_res}, m_max_vpls{osm.m_max_vpls},
+               m_inv_max_dist_sq{osm.m_inv_max_dist_sq}, m_fbo_handle{osm.m_fbo_handle},
+               m_cube_tex_handle{osm.m_cube_tex_handle} {
     // Mark as moved
     osm.m_cube_tex_handle = 0;
 }
