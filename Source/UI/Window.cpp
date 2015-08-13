@@ -93,7 +93,6 @@ static inline void APIENTRY debugCallback(const GLenum source, const GLenum type
             break;
         default:
             strcpy(severity_str, "UNKNOWN");
-            return;
     }
     // Print error information
     printError("%s message: %s[ %s ] ( %d ): %s\n", src_str, type_str, severity_str, id, msg);
