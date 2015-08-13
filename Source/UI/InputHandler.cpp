@@ -1,9 +1,9 @@
 #include "InputHandler.h"
-#include <GLFW\glfw3.h>
 #include "..\Common\Timer.h"
 #include "..\Common\Constants.h"
 #include "..\Common\Renderer.h"
 #include "..\Common\Scene.h"
+#include <GLFW\glfw3.h>
 
 using glm::vec3;
 

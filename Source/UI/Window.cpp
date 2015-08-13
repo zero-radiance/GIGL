@@ -1,9 +1,9 @@
 #include "Window.h"
 #include <cassert>
 #include <OpenGL\gl_core_4_4.hpp>
-#include <GLFW\glfw3.h>
 #include "..\Common\Constants.h"
 #include "..\Common\Utility.hpp"
+#include <GLFW\glfw3.h>
 
 static inline void errorCallback(const int, const char* const msg) {
     printError(msg);
