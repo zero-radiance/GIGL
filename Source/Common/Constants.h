@@ -50,6 +50,9 @@
 #define TEX_U_W_NORM   7            // Normal vector texture
 #define TEX_U_MAT_ID   8            // Material id texture
 
+/* Image unit allocation */
+#define IMG_U_ACCUM    0            // Accumulation buffer texture for progressive rendering
+
 /* Uniform locations */
 #define UL_SM_MODELMAT 0            // Model matrix
 #define UL_SM_LIGHTMVP 1            // 6 of them: 1..6

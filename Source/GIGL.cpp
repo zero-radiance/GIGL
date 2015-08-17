@@ -69,12 +69,12 @@ int main(int, char**) {
     sp1.setUniformValue("vol_dens",        TEX_U_DENS_V);
     sp1.setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
     sp1.setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
-    sp1.setUniformValue("accum_buffer",    TEX_U_ACCUM);
     sp1.setUniformValue("pi_dens",         TEX_U_PI_DENS);
     sp1.setUniformValue("halton_seq",      TEX_U_HALTON);
     sp1.setUniformValue("w_positions",     TEX_U_W_POS);
     sp1.setUniformValue("enc_w_normals",   TEX_U_W_NORM);
     sp1.setUniformValue("material_ids",    TEX_U_MAT_ID);
+    sp1.setUniformValue("accum_buffer",    IMG_U_ACCUM);
     sp1.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
     sp1.setUniformValue("fog_bounds[0]",   fog_pt_min);
     sp1.setUniformValue("fog_bounds[1]",   fog_pt_max);

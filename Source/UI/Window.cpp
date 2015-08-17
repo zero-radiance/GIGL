@@ -112,11 +112,11 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    // Request 32-bit floating-point RGB framebuffer
-    glfwWindowHint(GLFW_SRGB_CAPABLE, FALSE);
-    glfwWindowHint(GLFW_RED_BITS, 32);
-    glfwWindowHint(GLFW_GREEN_BITS, 32);
-    glfwWindowHint(GLFW_BLUE_BITS, 32);
+    // Request an sRGB8 framebuffer without a depth buffer
+    glfwWindowHint(GLFW_SRGB_CAPABLE, TRUE);
+    glfwWindowHint(GLFW_RED_BITS,   8);
+    glfwWindowHint(GLFW_GREEN_BITS, 8);
+    glfwWindowHint(GLFW_BLUE_BITS,  8);
     glfwWindowHint(GLFW_ALPHA_BITS, 0);
     glfwWindowHint(GLFW_DEPTH_BITS, 0);
     #ifdef _DEBUG
@@ -144,8 +144,9 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
         glfwTerminate();
         TERMINATE();
     }
-    gl::Enable(gl::CULL_FACE);		// Cull incorrectly-facing triangles (front or back)
-    gl::Disable(gl::DITHER);        // Disable dithering
+    gl::Enable(gl::FRAMEBUFFER_SRGB);   // Enable sRGB framebuffer support
+    gl::Enable(gl::CULL_FACE);		    // Cull incorrectly-facing triangles (front or back)
+    gl::Disable(gl::DITHER);            // Disable dithering
     #ifdef _DEBUG
         // Set debug callback
         gl::DebugMessageCallback(debugCallback, nullptr);
@@ -162,20 +163,6 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
         TERMINATE();
     }
     printInfo("OpenGL version: %s.", version);
-    // Create accumulation buffer texture
-    gl::ActiveTexture(gl::TEXTURE0 + TEX_U_ACCUM);
-    // Allocate texture storage
-    gl::GenTextures(1, &m_tex_handle);
-    gl::BindTexture(gl::TEXTURE_2D, m_tex_handle);
-    gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB32F, m_res_x, m_res_y, 0, gl::RGB, gl::FLOAT, nullptr);
-    // No mipmaps
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAX_LEVEL, 0);
-    // No filtering
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
-    // Use border-clamping for both dimensions
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_BORDER);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_BORDER);
 }
 
 Window::Window(Window&& wnd): m_window{wnd.m_window}, m_res_x{wnd.m_res_x}, m_res_y{wnd.m_res_y},
@@ -219,10 +206,6 @@ bool Window::shouldClose() const {
 }
 
 void Window::refresh() {
-    // Copy framebuffer contents to texture
-    gl::BindFramebuffer(gl::READ_FRAMEBUFFER, DEFAULT_FBO);
-    gl::BindTexture(gl::TEXTURE_2D, m_tex_handle);
-    gl::CopyTexImage2D(gl::TEXTURE_2D, 0, gl::RGB32F, 0, 0, m_res_x, m_res_y, 0);
     // Swap buffers
     glfwSwapBuffers(m_window);
 }

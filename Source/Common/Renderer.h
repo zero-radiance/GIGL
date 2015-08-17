@@ -64,6 +64,7 @@ private:
     GLuint              m_defer_fbo_handle; // Deferred framebuffer handle
     GLuint              m_depth_rbo_handle; // Depth renderbuffer handle
     GLVertArray         m_ss_quad_va;       // Vertex array with a screen space quad
+    GLTex2D_4x32F       m_tex_accum;        // Accumulation buffer image/texture
     GLTex2D_3x32F       m_tex_w_pos;        // World position texture
     GLTex2D_2x32F       m_tex_w_norm;       // Normal vector texture
     GLTex2D_1x8UI       m_tex_mat_id;       // Material id texture

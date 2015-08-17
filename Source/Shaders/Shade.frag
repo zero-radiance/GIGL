@@ -83,10 +83,10 @@ uniform bool          clamp_rsq;        // Determines whether radius squared is 
 uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
 uniform int           frame_id;         // Frame index, is set to zero on reset
 uniform int           exposure;         // Exposure time for basic brightness control
-uniform sampler2D     accum_buffer;     // Accumulation buffer (texture)
 uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
 uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_SAMPLES
+uniform coherent restrict layout(rgba32f) image2D accum_buffer; // Accumulation buffer
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -290,19 +290,25 @@ vec3 calcSecLSContrib(in const int light_id, in const vec3 samp_pt, in const vec
     return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt, material, norm);
 }
 
-// Returns color value from accumulation buffer
-vec3 queryAccumBuffer() {
-    return texelFetch(accum_buffer, ivec2(gl_FragCoord.xy), 0).rgb;
+// Returns the color value from the accumulation buffer
+vec4 readFromAccumBuffer() {
+    return imageLoad(accum_buffer, ivec2(gl_FragCoord.xy));
+}
+
+// Writes the color value to the accumulation buffer
+void writeToAccumBuffer(in const vec4 color) {
+    imageStore(accum_buffer, ivec2(gl_FragCoord.xy), color);
 }
 
 void main() {
+    frag_col = vec4(0.0, 0.0, 0.0, 1.0);
     if (frame_id < MAX_FRAMES) {
         // Perform shading
-        vec3 color = vec3(0.0);
         Material material = getMaterial();
         if (material.k_e != vec3(0.0)) {
             // Return emission value
-            color = material.k_e;
+            // TODO: account for fog
+            frag_col.rgb = material.k_e;
         } else {
             float transm_frag = 1.0;
             const vec3 w_pos  = getWorldPos();
@@ -330,20 +336,20 @@ void main() {
                             if (clamp_rsq) {
                                 // Gather contribution of primary lights
                                 for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                                    color += transm * calcPriLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
+                                    frag_col.rgb += transm * calcPriLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
                                 }
                             }
                             if (gi_enabled) {
                                 // Gather contribution of secondary lights
                                 for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                                    color += transm * calcSecLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
+                                    frag_col.rgb += transm * calcSecLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
                                 }
                             }
                         }
                     }
                     // Normalize
                     const float inv_p = t_max - t_min;
-                    color *= inv_p / n_samples;
+                    frag_col.rgb *= inv_p / n_samples;
                     // Compute transmittance from camera to fragment along primary ray
                     const float z = (t_frag - t_min) / (t_max - t_min);
                     const float opt_depth = ext_k * texture(pi_dens, vec3(xy, z)).r;
@@ -356,31 +362,29 @@ void main() {
                 if (clamp_rsq) {
                     // Gather contribution of primary lights
                     for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                        color += transm_frag * calcPriLSContrib(i, w_pos, ray_d, true, material, w_norm);
+                        frag_col.rgb += transm_frag * calcPriLSContrib(i, w_pos, ray_d, true, material, w_norm);
                     }
                 }
                 if (gi_enabled) {
                     // Gather contribution of secondary lights
                     for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                        color += transm_frag * calcSecLSContrib(i, w_pos, ray_d, true, material, w_norm);
+                        frag_col.rgb += transm_frag * calcSecLSContrib(i, w_pos, ray_d, true, material, w_norm);
                     }
                 }
             }
         }
-        // Perform tone mapping
-        color = vec3(1.0) - exp(-exposure * color);
         if (frame_id > 0) {
-            // Query the old value; undo gamma correction
-            const vec3 prev_color = pow(queryAccumBuffer(), vec3(GAMMA));
-            // Blend values
-            color = (color + frame_id * prev_color) / (frame_id + 1);
+            // Read the value from the previous frame
+            const vec4 prev_color = readFromAccumBuffer();
+            // Blend the colors
+            frag_col.rgb = (frag_col.rgb + frame_id * prev_color.rgb) / (frame_id + 1);
         }
-        // Perform gamma correction
-        color = pow(color, vec3(1.0 / GAMMA));
-        // Write the result
-        frag_col = vec4(color, 1.0);
+        // Update the accumulation buffer
+        writeToAccumBuffer(frag_col);
     } else {
-        // Return value from previous frame
-        frag_col = vec4(queryAccumBuffer(), 1.0);
+        // Read the value from the previous frame
+        frag_col = readFromAccumBuffer();
     }
+    // Perform tone mapping
+    frag_col.rgb = vec3(1.0) - exp(-exposure * frag_col.rgb);
 }

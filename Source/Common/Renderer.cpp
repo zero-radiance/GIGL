@@ -22,6 +22,7 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
                   m_ppl_OSM{PRI_SM_RES, 1,          MAX_DIST, TEX_U_PPL_SM},
                   m_vpl_OSM{SEC_SM_RES, MAX_N_VPLS, MAX_DIST, TEX_U_VPL_SM},
                   m_ss_quad_va{ss_quad_va_components, ss_quad_va_comp_cnts},
+                  m_tex_accum{TEX_U_ACCUM, res_x, res_y, false, false},
                   m_tex_w_pos{ TEX_U_W_POS,  res_x, res_y, false, false},
                   m_tex_w_norm{TEX_U_W_NORM, res_x, res_y, false, false},
                   m_tex_mat_id{TEX_U_MAT_ID, res_x, res_y, false, false} {
@@ -55,6 +56,8 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
                                       1.0f,  1.0f, 0.0f};
     m_ss_quad_va.loadData(0, 12, ss_quad_pos);
     m_ss_quad_va.buffer();
+    // Bind the accumulation texture to the image unit
+    gl::BindImageTexture(IMG_U_ACCUM, m_tex_accum.id(), 0, false, 0, gl::READ_WRITE, gl::RGBA32F);
     // Generate and bind the FBO
     gl::GenFramebuffers(1, &m_defer_fbo_handle);
     gl::BindFramebuffer(gl::FRAMEBUFFER, m_defer_fbo_handle);
@@ -65,12 +68,12 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
     // Attach textures to the framebuffer
     gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
                                 gl::RENDERBUFFER, m_depth_rbo_handle);
-    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
-                             gl::TEXTURE_2D, m_tex_w_pos.id(), 0);
-    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT1,
-                             gl::TEXTURE_2D, m_tex_w_norm.id(), 0);
-    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT2,
-                             gl::TEXTURE_2D, m_tex_mat_id.id(), 0);
+    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D,
+                             m_tex_w_pos.id(), 0);
+    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT1, gl::TEXTURE_2D,
+                             m_tex_w_norm.id(), 0);
+    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT2, gl::TEXTURE_2D,
+                             m_tex_mat_id.id(), 0);
     // Specify the buffers to draw to
     GLenum draw_buffers[] = {gl::COLOR_ATTACHMENT0, gl::COLOR_ATTACHMENT1, gl::COLOR_ATTACHMENT2};
     gl::DrawBuffers(3, draw_buffers);
@@ -91,6 +94,7 @@ DeferredRenderer::DeferredRenderer(DeferredRenderer&& dr): m_res_x{dr.m_res_x}, 
                   m_vpl_OSM{std::move(dr.m_vpl_OSM)}, m_defer_fbo_handle{dr.m_defer_fbo_handle},
                   m_depth_rbo_handle{dr.m_depth_rbo_handle},
                   m_ss_quad_va{std::move(dr.m_ss_quad_va)},
+                  m_tex_accum{std::move(m_tex_accum)},
                   m_tex_w_pos{std::move(dr.m_tex_w_pos)},
                   m_tex_w_norm{std::move(dr.m_tex_w_norm)},
                   m_tex_mat_id{std::move(dr.m_tex_mat_id)} {
