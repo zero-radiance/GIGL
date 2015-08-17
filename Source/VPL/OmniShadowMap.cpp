@@ -1,4 +1,5 @@
 #include "OmniShadowMap.h"
+#include <utility>
 #include <GLM\gtc\matrix_transform.hpp>
 #include <OpenGL\gl_core_4_4.hpp>
 #include "..\Common\Constants.h"
@@ -69,7 +70,7 @@ OmniShadowMap& OmniShadowMap::operator=(const OmniShadowMap& osm) {
     return *this;
 }
 
-OmniShadowMap::OmniShadowMap(OmniShadowMap&& osm): m_view_proj(osm.m_view_proj),
+OmniShadowMap::OmniShadowMap(OmniShadowMap&& osm): m_view_proj(std::move(osm.m_view_proj)),
                m_tex_unit{osm.m_tex_unit}, m_res{osm.m_res}, m_max_vpls{osm.m_max_vpls},
                m_inv_max_dist_sq{osm.m_inv_max_dist_sq}, m_fbo_handle{osm.m_fbo_handle},
                m_cube_tex_handle{osm.m_cube_tex_handle} {

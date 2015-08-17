@@ -5,7 +5,7 @@
 GLRTBLockMngr::GLRingTripleBufferLockManager(): m_buf_idx{0}, m_fences{} {}
 
 GLRTBLockMngr::GLRingTripleBufferLockManager(GLRTBLockMngr&& rtb_lock_mngr):
-             m_buf_idx{rtb_lock_mngr.m_buf_idx}, m_fences(rtb_lock_mngr.m_fences) {
+             m_buf_idx{rtb_lock_mngr.m_buf_idx}, m_fences(std::move(rtb_lock_mngr.m_fences)) {
     // Mark as moved
     rtb_lock_mngr.m_buf_idx = -1;
 }
