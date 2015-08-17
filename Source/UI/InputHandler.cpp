@@ -19,8 +19,12 @@ void InputHandler::init(RenderSettings* params) {
 
 void InputHandler::updateParams(GLFWwindow* const wnd) {
     m_params->curr_time_ms = HighResTimer::time_ms();
+    // Process keyboard events
+    glfwPollEvents();
     handleToggles(wnd);
     handleSmoothInput(wnd);
+    // Reset the (delta_t) frame timer
+    glfwSetTime(0.0);
 }
 
 void InputHandler::handleToggles(GLFWwindow* const wnd) {

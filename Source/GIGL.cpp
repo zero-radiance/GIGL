@@ -13,7 +13,6 @@
 #include "VPL\LightArray.hpp"
 
 using glm::vec3;
-using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
@@ -32,7 +31,7 @@ int main(int, char**) {
     Window window{WINDOW_RES, WINDOW_RES};
     if (!window.isOpen()) return -1;
     // Set up the renderer
-    DeferredRenderer engine;
+    DeferredRenderer engine{WINDOW_RES, WINDOW_RES};
     // Set up the camera
     const PerspectiveCamera cam{{278.0f, 273.0f, -800.0f},  // Position
                                 {0.0f, 0.0f, 1.0f},			// Direction
@@ -47,7 +46,7 @@ int main(int, char**) {
     const mat3 norm_mat{cam.computeNormXForm(model_mat)};	// Matrix transforming normals
     // Load the scene
     scene = new Scene;
-    scene->loadObjects("Assets\\cornell_box.obj", engine.getShaderProgram().id());
+    scene->loadObjects("Assets\\cornell_box.obj");
     // Set up fog
     scene->addFog("Assets\\df.3dt", "Assets\\pi_df.3dt", MAJ_EXT_K, ABS_K, SCA_K, cam);
     const BBox& fog_box{scene->getFogBounds()};
@@ -59,20 +58,27 @@ int main(int, char**) {
     LightArray<PPL> ppls{1};
     LightArray<VPL> vpls{MAX_N_VPLS};
     // Set static uniforms
-    engine.getShaderProgram().setUniformValue("cam_w_pos",       cam.worldPos());
-    engine.getShaderProgram().setUniformValue("vol_dens",        TEX_U_DENS_V);
-    engine.getShaderProgram().setUniformValue("pi_dens",         TEX_U_PI_DENS);
-    engine.getShaderProgram().setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
-    engine.getShaderProgram().setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
-    engine.getShaderProgram().setUniformValue("accum_buffer",    TEX_U_ACCUM);
-    engine.getShaderProgram().setUniformValue("halton_seq",      TEX_U_HALTON);
-    engine.getShaderProgram().setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
-    engine.getShaderProgram().setUniformValue("fog_bounds[0]",   fog_pt_min);
-    engine.getShaderProgram().setUniformValue("fog_bounds[1]",   fog_pt_max);
-    engine.getShaderProgram().setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
-    engine.getShaderProgram().setUniformValue("model_mat",       model_mat);
-    engine.getShaderProgram().setUniformValue("MVP",             MVP);
-    engine.getShaderProgram().setUniformValue("norm_mat",        norm_mat);
+    const auto& sp0 = engine.getGBufProgram();
+    sp0.use();
+    sp0.setUniformValue("model_mat",       model_mat);
+    sp0.setUniformValue("MVP",             MVP);
+    sp0.setUniformValue("norm_mat",        norm_mat);
+    const auto& sp1 = engine.getShadingProgram();
+    sp1.use();
+    sp1.setUniformValue("cam_w_pos",       cam.worldPos());
+    sp1.setUniformValue("vol_dens",        TEX_U_DENS_V);
+    sp1.setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
+    sp1.setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
+    sp1.setUniformValue("accum_buffer",    TEX_U_ACCUM);
+    sp1.setUniformValue("pi_dens",         TEX_U_PI_DENS);
+    sp1.setUniformValue("halton_seq",      TEX_U_HALTON);
+    sp1.setUniformValue("w_positions",     TEX_U_W_POS);
+    sp1.setUniformValue("enc_w_normals",   TEX_U_W_NORM);
+    sp1.setUniformValue("material_ids",    TEX_U_MAT_ID);
+    sp1.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
+    sp1.setUniformValue("fog_bounds[0]",   fog_pt_min);
+    sp1.setUniformValue("fog_bounds[1]",   fog_pt_max);
+    sp1.setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
     ppls.bind(UB_PPL_ARR);
     vpls.bind(UB_VPL_ARR);
     // Init dynamic uniforms
@@ -93,24 +99,26 @@ int main(int, char**) {
         // Generate shadow maps
         const uint t1{HighResTimer::time_ms()};
         engine.generateShadowMaps(*scene, model_mat, ppls, vpls);
-        // RENDER
+        // Generate a G-buffer
         const uint t2{HighResTimer::time_ms()};
-        window.clear();
-        engine.shade(*scene, tri_buf_idx);
+        engine.generateGBuffer(*scene);
+        // Perform shading
+        const uint t3{HighResTimer::time_ms()};
+        engine.shade(tri_buf_idx);
         // Switch to the next buffer
         rtb_lock_mngr.lockBuffer();
         ppls.switchToNextBuffer();
         vpls.switchToNextBuffer();
         tri_buf_idx = (tri_buf_idx + 1) % 3;
         // Prepare to draw the next frame
-        window.refresh();
         engine.settings.frame_num++;
+        window.refresh();
         // Display frame time
-        const uint t3{HighResTimer::time_ms()};
+        const uint t4{HighResTimer::time_ms()};
         char title[TITLE_LEN];
         if (engine.settings.frame_num <= 30) {
-            sprintf_s(title, TITLE_LEN, "GLGI (Render: %u ms | SM: %u ms | Misc: %u ms)",
-                      t3 - t2, t2 - t1, t1 - t0);
+            sprintf_s(title, TITLE_LEN, "GLGI (Shade: %u ms | GBuf: %u ms | SM: %u ms | PT: %u ms)",
+                      t4 - t3, t3 - t2, t2 - t1, t1 - t0);
         } else {
             sprintf_s(title, TITLE_LEN, "GLGI (done)");
         }

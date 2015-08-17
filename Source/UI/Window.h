@@ -14,8 +14,6 @@ public:
     explicit Window(const int res_x, const int res_y);
     // Returns true if window has been opened successfully
     const bool isOpen() const;
-    // Clears window and associated buffers
-    void clear() const;
     // Returns true if closing sequence has been triggered
     bool shouldClose() const;
     // Refreshes image, swaps buffers

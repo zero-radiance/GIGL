@@ -1,66 +1,73 @@
 #version 440
 
-#define PI            3.14159274    // π
-#define INV_PI        0.318309873   // 1 / π
-#define CAM_RES       800           // Camera sensor resolution
-#define GAMMA         2.2333333     // Gamma value for gamma correction
-#define HG_G          0.25          // Henyey-Greenstein scattering asymmetry parameter
-#define N_PPLS        1             // Number of primary lights
-#define N_VPLS        150           // Number of secondary lights
-#define OFFSET        0.001         // Shadow mapping offset
-#define R_M_INTERVALS 8             // Number of ray marching intervals
-#define CLAMP_DIST_SQ 75.0 * 75.0   // Radius squared used for clamping
-#define MAX_FRAMES    30            // Maximal number of frames before convergence is achieved
-#define MAX_SAMPLES   24            // Maximal number of samples per pixel
+#define PI            3.14159274        // π
+#define INV_PI        0.318309873       // 1 / π
+#define CAM_RES       800               // Camera sensor resolution
+#define GAMMA         2.2333333         // Gamma value for gamma correction
+#define HG_G          0.25              // Henyey-Greenstein scattering asymmetry parameter
+#define OFFSET        0.001             // Shadow mapping offset
+#define R_M_INTERVALS 8                 // Number of ray marching intervals
+#define CLAMP_DIST_SQ 75.0 * 75.0       // Radius squared used for clamping
+#define MAX_MATERIALS 8                 // Max. number of materials
+#define MAX_PPLS      1                 // Max. number of primary lights
+#define MAX_VPLS      150               // Max. number of secondary lights
+#define MAX_FRAMES    30                // Max. number of frames before convergence is achieved
+#define MAX_SAMPLES   24                // Max. number of samples per pixel
 
-struct PriLight {
-    vec3 w_pos;                     // Position in world space
-    vec3 intens;                    // Light intensity
+struct Material {
+    vec3  k_d;                          // Diffuse coefficient
+    vec3  k_s;                          // Specular coefficient
+    float n_s;                          // Specular exponent
+    vec3  k_e;                          // Emission [coefficient]
 };
 
-struct SecLight {
-    vec3  w_pos;                    // Position in world space                | Volume and Surface
-    uint  type;                     // 1 = VPL in volume, 2 = VPL on surface  | Volume and Surface
-    vec3  intens;                   // Intensity (incident radiance)          | Volume and Surface
-    float sca_k;                    // Scattering coefficient                 | Volume only
-    vec3  w_inc;                    // Incoming direction in world space      | Volume and Surface
-    uint  path_id;                  // Path index                             | Volume and Surface
-    vec3  w_norm;                   // Normal direction in world space        | Surface only
-    vec3  k_d;                      // Diffuse coefficient                    | Surface only
-    vec3  k_s;                      // Specular coefficient                   | Surface only
-    float n_s;                      // Specular exponent                      | Surface only
+struct PrimaryPointLight {
+    vec3 w_pos;                         // Position in world space
+    vec3 intens;                        // Light intensity
 };
 
-// Vars IN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+struct VirtualPointLight {
+    vec3  w_pos;                        // Position in world space             | Volume & Surface
+    uint  type;                         // 1: VPL in volume, 2: VPL on surface | Volume & Surface
+    vec3  intens;                       // Intensity (incident radiance)       | Volume & Surface
+    float sca_k;                        // Scattering coefficient              | Volume only
+    vec3  w_inc;                        // Incoming direction in world space   | Volume & Surface
+    uint  path_id;                      // Path index                          | Volume & Surface
+    vec3  w_norm;                       // Normal direction in world space     | Surface only
+    vec3  k_d;                          // Diffuse coefficient                 | Surface only
+    vec3  k_s;                          // Specular coefficient                | Surface only
+    float n_s;                          // Specular exponent                   | Surface only
+};
 
-layout (early_fragment_tests) in;   // Force early Z-test (prior to fragment shader)
+// Vars IN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-smooth in vec3 w_pos;               // Fragment position in world space
-smooth in vec3 w_norm;              // Fragment normal in world space
+layout (early_fragment_tests) in;       // Force early Z-test (prior to fragment shader)
 
-layout (binding = 0)
-uniform MaterialInfo {
-    vec3  k_d;                      // Diffuse coefficient
-    vec3  k_s;                      // Specular coefficient
-    vec3  k_e;                      // Emission
-    float n_s;                      // Specular exponent
-} material;
+layout (std140, binding = 0)
+uniform Materials {
+    Material materials[MAX_MATERIALS];
+};
 
 layout (std140, binding = 1)
-uniform PriLightInfo {
-    PriLight ppls[3 * N_PPLS];
+uniform PPLs {
+    PrimaryPointLight ppls[3 * MAX_PPLS];
 };
 
 layout (std140, binding = 2)
-uniform SecLightInfo {
-    SecLight vpls[3 * N_VPLS];
+uniform VPLs {
+    VirtualPointLight vpls[3 * MAX_VPLS];
 };
 
 // Omnidirectional shadow mapping
-uniform int                    n_vpls;              // Number of active VPLs
-uniform samplerCubeArrayShadow ppl_shadow_cube;     // Cubemap array of shadowmaps of PPLs
-uniform samplerCubeArrayShadow vpl_shadow_cube;     // Cubemap array of shadowmaps of VPLs
-uniform float                  inv_max_dist_sq;     // Inverse max. [shadow] distance squared
+uniform int                    n_vpls;          // Number of active VPLs
+uniform samplerCubeArrayShadow ppl_shadow_cube; // Cubemap array of shadowmaps of PPLs
+uniform samplerCubeArrayShadow vpl_shadow_cube; // Cubemap array of shadowmaps of VPLs
+uniform float                  inv_max_dist_sq; // Inverse max. [shadow] distance squared
+
+// G-buffer
+uniform sampler2D     w_positions;      // Per-fragment position(s) in world space
+uniform sampler2D     enc_w_normals;    // Encoded per-fragment normal(s) in world space
+uniform usampler2D    material_ids;     // Per-fragment material indices
 
 // Fog
 uniform sampler3D     vol_dens;         // Normalized volume density (3D texture)
@@ -81,12 +88,48 @@ uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
 uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_SAMPLES
 
-// Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 layout (location = 0) out vec4 frag_col;
 
-// Implementation >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// Implementation >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+// The inverse of Lambert's azimuthal equal-area projection
+// https://en.wikipedia.org/wiki/Lambert_azimuthal_equal-area_projection
+vec3 invLambertAzimEAProj(const vec2 n) {
+    if (abs(n.x) != 2.0) {
+        // Regular case
+        const float d = dot(n, n);
+        const float f = sqrt(1.0 - 0.25 * d);
+        return vec3(f * n, -1.0 + 0.5 * d);
+    } else {
+        // Special case
+        // Map (2, -1) to (0, 0, 1) and (-2, 1) to (0, 0, -1)
+        return vec3(0.0, 0.0, n.x + n.y);
+    }
+}
+
+// Returns fragment's position in world space
+vec3 getWorldPos() {
+    //return texture(w_positions, tex_coord).rgb;
+    return texelFetch(w_positions, ivec2(gl_FragCoord.xy), 0).rgb;
+}
+
+// Returns fragment's normal in world space
+vec3 getWorldNorm() {
+    //const vec2 enc_norm = texture(enc_w_normals, tex_coord).rg;
+    const vec2 enc_norm = texelFetch(enc_w_normals, ivec2(gl_FragCoord.xy), 0).rg;
+    return invLambertAzimEAProj(enc_norm);
+}
+
+// Returns fragment's material in world space
+Material getMaterial() {
+    //const uint mat_id = texture(material_ids, tex_coord).r;
+    const uint mat_id = texelFetch(material_ids, ivec2(gl_FragCoord.xy), 0).r;
+    return materials[mat_id];
+}
+
+// Performs ray-BBox intersection
 bool intersectBBox(in const vec3 bound_pts[2], in const vec3 ray_o, in const vec3 ray_d,
                    in const float max_dist, out float t_min, out float t_max) {
     const vec3 inv_ray_d = 1.0 / ray_d;
@@ -107,22 +150,27 @@ bool intersectBBox(in const vec3 bound_pts[2], in const vec3 ray_o, in const vec
     return t_max > max(t_min, 0.0) && t_min < max_dist;
 }
 
+// Computes fog density at the specified world position
 float calcFogDens(in const vec3 w_pos) {
     const vec3 r_pos = w_pos - fog_bounds[0];
     const vec3 n_pos = r_pos * inv_fog_dims;
     return texture(vol_dens, n_pos).r;
 }
 
+// Returns the scattering coefficient at the specified world space position
 float sampleScaK(in const vec3 w_pos) {
     return sca_k * calcFogDens(w_pos);
 }
 
+
+// Returns the extinction coefficient at the specified world space position
 float sampleExtK(in const vec3 w_pos) {
     return ext_k * calcFogDens(w_pos);
 }
 
 // Performs ray marching
-float rayMarch( in const vec3 ray_o, in const vec3 ray_d, in const float t_min, in const float t_max ) {
+float rayMarch(in const vec3 ray_o, in const vec3 ray_d,
+               in const float t_min, in const float t_max) {
     const float dt    = (t_max - t_min) / R_M_INTERVALS;
     float prev_ext_k  = sampleExtK(ray_o + t_min * ray_d);
     float total_ext_k = 0.0;
@@ -173,7 +221,7 @@ float evalPhaseHG(in const float cos_the) {
 }
 
 // Returns radiance emitted in given direction
-vec3 calcLe(in const SecLight vpl, in const vec3 LtoP) {
+vec3 calcLe(in const VirtualPointLight vpl, in const vec3 LtoP) {
     switch (vpl.type) {
         case 1: // VPL in volume
         {
@@ -192,10 +240,11 @@ vec3 calcLe(in const SecLight vpl, in const vec3 LtoP) {
 }
 
 // Evaluates rendering equation
-vec3 evalRE(in const vec3 I, in const vec3 O, in const vec3 Li, in const vec3 samp_pt, in const bool is_surf_pt) {
+vec3 evalRE(in const vec3 I, in const vec3 O, in const vec3 Li, in const vec3 samp_pt,
+            in const bool is_surf_pt, in const Material material, in const vec3 N) {
     if (is_surf_pt) {
-        const float cos_the_inc = max(0.0, dot(I, w_norm));
-        return phongBRDF(I, w_norm, O, material.k_d, material.k_s, material.n_s) * Li * cos_the_inc;
+        const float cos_the_inc = max(0.0, dot(I, N));
+        return phongBRDF(I, N, O, material.k_d, material.k_s, material.n_s) * Li * cos_the_inc;
     } else {
         // Incoming direction points TOWARDS the light, so we have to reverse it
         const float cos_the = -dot(I, O);
@@ -204,7 +253,8 @@ vec3 evalRE(in const vec3 I, in const vec3 O, in const vec3 Li, in const vec3 sa
 }
 
 // Compute contribution of primary lights
-vec3 calcPriLSContrib(in const int light_id, in const vec3 samp_pt, in const vec3 pri_ray_d, in const bool is_surf_pt) {
+vec3 calcPriLSContrib(in const int light_id, in const vec3 samp_pt, in const vec3 pri_ray_d,
+                      in const bool is_surf_pt, in const Material material, in const vec3 norm) {
     vec3 LtoP = samp_pt - ppls[light_id].w_pos;
     const float dist_sq = dot(LtoP, LtoP);
     LtoP = normalize(LtoP);
@@ -218,11 +268,12 @@ vec3 calcPriLSContrib(in const int light_id, in const vec3 samp_pt, in const vec
     const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
     const vec3  Li      = transm * ppls[light_id].intens * falloff;
     // Evaluate rendering equation at sample point
-    return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt);
+    return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt, material, norm);
 }
 
 // Compute contribution of secondary lights
-vec3 calcSecLSContrib(in const int light_id, in const vec3 samp_pt, in const vec3 pri_ray_d, in const bool is_surf_pt) {
+vec3 calcSecLSContrib(in const int light_id, in const vec3 samp_pt, in const vec3 pri_ray_d,
+                      in const bool is_surf_pt, in const Material material, in const vec3 norm) {
     vec3 LtoP = samp_pt - vpls[light_id].w_pos;
     const float dist_sq = dot(LtoP, LtoP);
     LtoP = normalize(LtoP);
@@ -236,7 +287,7 @@ vec3 calcSecLSContrib(in const int light_id, in const vec3 samp_pt, in const vec
     const float falloff = 1.0 / (clamp_rsq ? max(dist_sq, CLAMP_DIST_SQ) : dist_sq);
     const vec3  Li      = transm * calcLe(vpls[light_id], LtoP) * falloff;
     // Evaluate rendering equation at sample point
-    return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt);
+    return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt, material, norm);
 }
 
 // Returns color value from accumulation buffer
@@ -248,12 +299,14 @@ void main() {
     if (frame_id < MAX_FRAMES) {
         // Perform shading
         vec3 color = vec3(0.0);
+        Material material = getMaterial();
         if (material.k_e != vec3(0.0)) {
             // Return emission value
             color = material.k_e;
         } else {
             float transm_frag = 1.0;
-            const vec3 ray_d = normalize(w_pos - cam_w_pos);
+            const vec3 w_pos  = getWorldPos();
+            const vec3 ray_d  = normalize(w_pos - cam_w_pos);
             if (sca_k > 0.0) {
                 const vec2 xy = gl_FragCoord.xy / CAM_RES;
                 // Compute intersection with fog volume
@@ -276,14 +329,14 @@ void main() {
                         if (transm > 0.001) {
                             if (clamp_rsq) {
                                 // Gather contribution of primary lights
-                                for (int i = tri_buf_idx * N_PPLS, e = i + N_PPLS; i < e; ++i) {
-                                    color += transm * calcPriLSContrib(i, s_pos, ray_d, false);
+                                for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
+                                    color += transm * calcPriLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
                                 }
                             }
                             if (gi_enabled) {
                                 // Gather contribution of secondary lights
-                                for (int i = tri_buf_idx * N_VPLS, e = i + n_vpls; i < e; ++i) {
-                                    color += transm * calcSecLSContrib(i, s_pos, ray_d, false);
+                                for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
+                                    color += transm * calcSecLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
                                 }
                             }
                         }
@@ -299,16 +352,17 @@ void main() {
             }
             /* Compute surface contribution */
             if (transm_frag > 0.001) {
+                const vec3 w_norm = getWorldNorm();
                 if (clamp_rsq) {
                     // Gather contribution of primary lights
-                    for (int i = tri_buf_idx * N_PPLS, e = i + N_PPLS; i < e; ++i) {
-                        color += transm_frag * calcPriLSContrib(i, w_pos, ray_d, true);
+                    for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
+                        color += transm_frag * calcPriLSContrib(i, w_pos, ray_d, true, material, w_norm);
                     }
                 }
                 if (gi_enabled) {
                     // Gather contribution of secondary lights
-                    for (int i = tri_buf_idx * N_VPLS, e = i + n_vpls; i < e; ++i) {
-                        color += transm_frag * calcSecLSContrib(i, w_pos, ray_d, true);
+                    for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
+                        color += transm_frag * calcSecLSContrib(i, w_pos, ray_d, true, material, w_norm);
                     }
                 }
             }

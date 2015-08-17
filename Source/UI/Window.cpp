@@ -118,7 +118,7 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
     glfwWindowHint(GLFW_GREEN_BITS, 32);
     glfwWindowHint(GLFW_BLUE_BITS, 32);
     glfwWindowHint(GLFW_ALPHA_BITS, 0);
-    glfwWindowHint(GLFW_DEPTH_BITS, 24);
+    glfwWindowHint(GLFW_DEPTH_BITS, 0);
     #ifdef _DEBUG
         // Enable debug messages
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
@@ -144,8 +144,8 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
         glfwTerminate();
         TERMINATE();
     }
-    gl::Enable(gl::DEPTH_TEST);		// Perform depth test
     gl::Enable(gl::CULL_FACE);		// Cull incorrectly-facing triangles (front or back)
+    gl::Disable(gl::DITHER);        // Disable dithering
     #ifdef _DEBUG
         // Set debug callback
         gl::DebugMessageCallback(debugCallback, nullptr);
@@ -214,13 +214,6 @@ const bool Window::isOpen() const {
     return m_is_ok;
 }
 
-void Window::clear() const {
-    gl::Viewport(0, 0, m_res_x, m_res_y);
-    gl::BindFramebuffer(gl::FRAMEBUFFER, DEFAULT_FBO);
-    gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-    glfwSetTime(0);
-}
-
 bool Window::shouldClose() const {
     return (0 != glfwWindowShouldClose(m_window));
 }
@@ -232,7 +225,6 @@ void Window::refresh() {
     gl::CopyTexImage2D(gl::TEXTURE_2D, 0, gl::RGB32F, 0, 0, m_res_x, m_res_y, 0);
     // Swap buffers
     glfwSwapBuffers(m_window);
-    glfwPollEvents();
 }
 
 void Window::setTitle(const char* const title) {

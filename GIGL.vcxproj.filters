@@ -248,12 +248,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source\Shaders\Render.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Source\Shaders\Render.vert">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Source\Shaders\Shadow.frag">
       <Filter>Shaders</Filter>
     </None>
@@ -264,5 +258,17 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include=".gitignore" />
+    <None Include="Source\Shaders\GBuffer.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\GBuffer.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Shade.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Shade.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

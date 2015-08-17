@@ -166,10 +166,10 @@ void GLVertArray::buffer() {
 }
 
 
-void GLVertArray::draw() const {
+void GLVertArray::draw(const GLenum mode) const {
     assert(m_is_buffered);
     gl::BindVertexArray(m_handle);
     // The size of the first buffer determines the number of vertices
     const auto n_vert = static_cast<GLsizei>(m_vbos[0].data_vec.size() / 3);
-    gl::DrawArrays(gl::TRIANGLES, 0, n_vert);
+    gl::DrawArrays(mode, 0, n_vert);
 }
