@@ -27,5 +27,5 @@ private:
     GLuint m_handle;     // OpenGL handle
 };
 
-using GLPSB430 = GLPersistentBuffer<gl::SHADER_STORAGE_BUFFER>;
 using GLPUB140 = GLPersistentBuffer<gl::UNIFORM_BUFFER>;
+using GLPSB430 = GLPersistentBuffer<gl::SHADER_STORAGE_BUFFER>;
