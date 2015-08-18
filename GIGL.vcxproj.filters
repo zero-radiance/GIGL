@@ -264,10 +264,13 @@
     <None Include="Source\Shaders\GBuffer.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Source\Shaders\Shade.frag">
+    <None Include="Source\Shaders\Shade.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Source\Shaders\Shade.vert">
+    <None Include="Source\Shaders\Surface.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Volume.frag">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

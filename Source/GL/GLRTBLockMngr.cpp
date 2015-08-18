@@ -59,3 +59,7 @@ void GLRTBLockMngr::waitForLockExpiration() {
                  wait_status != gl::CONDITION_SATISFIED);
     }
 }
+
+int GLRTBLockMngr::getActiveBufIdx() const {
+    return m_buf_idx;
+}

@@ -23,9 +23,10 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
                   m_vpl_OSM{SEC_SM_RES, MAX_N_VPLS, MAX_DIST, TEX_U_VPL_SM},
                   m_ss_quad_va{ss_quad_va_components, ss_quad_va_comp_cnts},
                   m_tex_accum{TEX_U_ACCUM, res_x, res_y, false, false},
-                  m_tex_w_pos{ TEX_U_W_POS,  res_x, res_y, false, false},
+                  m_tex_w_pos{TEX_U_W_POS, res_x, res_y, false, false},
                   m_tex_w_norm{TEX_U_W_NORM, res_x, res_y, false, false},
-                  m_tex_mat_id{TEX_U_MAT_ID, res_x, res_y, false, false} {
+                  m_tex_mat_id{TEX_U_MAT_ID, res_x, res_y, false, false},
+                  m_tex_fog_dist{TEX_U_FOG_DIST, res_x, res_y, false, false} {
     // Generate a Halton sequence for 30 frames with (up to) 24 samples per frame
     static const GLuint seq_sz{30 * 24};
     GLfloat hal_seq[seq_sz];
@@ -40,24 +41,33 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
     m_sp_gbuf.loadShader("Source\\Shaders\\GBuffer.vert");
     m_sp_gbuf.loadShader("Source\\Shaders\\GBuffer.frag");
     m_sp_gbuf.link();
-    // Load shaders which perform shading
-    m_sp_shade.loadShader("Source\\Shaders\\Shade.vert");
-    m_sp_shade.loadShader("Source\\Shaders\\Shade.frag");
-    m_sp_shade.link();
-    m_sp_shade.use();
+    // Load shaders which perform surface shading
+    m_sp_shade_surface.loadShader("Source\\Shaders\\Shade.vert");
+    m_sp_shade_surface.loadShader("Source\\Shaders\\Surface.frag");
+    m_sp_shade_surface.link();
+    // Load shaders which perform volume shading
+    m_sp_shade_volume.loadShader("Source\\Shaders\\Shade.vert");
+    m_sp_shade_volume.loadShader("Source\\Shaders\\Volume.frag");
+    m_sp_shade_volume.link();
     // Manage the following uniforms automatically
-    m_uniform_mngr.setManagedUniforms(m_sp_shade, {"gi_enabled", "clamp_rsq", "exposure",
-                                                   "frame_id", "n_vpls", "sca_k", "ext_k",
-                                                   "sca_albedo", "tri_buf_idx"});
+    m_uni_mngr_surf.setManagedUniforms(m_sp_shade_surface, {"gi_enabled", "clamp_rsq", "exposure",
+                                                            "frame_id", "n_vpls", "ext_k",
+                                                            "sca_albedo", "tri_buf_idx"});
+    m_uni_mngr_vol.setManagedUniforms(m_sp_shade_volume, {"gi_enabled", "clamp_rsq", "exposure",
+                                                          "frame_id", "n_vpls", "sca_k", "ext_k",
+                                                          "sca_albedo", "tri_buf_idx"});
     // Create a screen space quad
-    CONSTEXPR float ss_quad_pos[] = {-1.0f, -1.0f, 0.0f,
-                                      1.0f, -1.0f, 0.0f,
-                                     -1.0f,  1.0f, 0.0f,
-                                      1.0f,  1.0f, 0.0f};
+    CONSTEXPR float ss_quad_pos[] = {-1.0f, -1.0f, 0.0f,    // Bottom left
+                                      1.0f, -1.0f, 0.0f,    // Bottom right
+                                     -1.0f,  1.0f, 0.0f,    // Top left
+                                      1.0f,  1.0f, 0.0f};   // Top right
     m_ss_quad_va.loadData(0, 12, ss_quad_pos);
     m_ss_quad_va.buffer();
-    // Bind the accumulation texture to the image unit
-    gl::BindImageTexture(IMG_U_ACCUM, m_tex_accum.id(), 0, false, 0, gl::READ_WRITE, gl::RGBA32F);
+    // Bind textures to image units
+    gl::BindImageTexture(IMG_U_ACCUM, m_tex_accum.id(),
+                         0, false, 0, gl::READ_WRITE, gl::RGBA32F);
+    gl::BindImageTexture(IMG_U_FOG_DIST, m_tex_fog_dist.id(),
+                         0, false, 0, gl::READ_WRITE, gl::RG32F);
     // Generate and bind the FBO
     gl::GenFramebuffers(1, &m_defer_fbo_handle);
     gl::BindFramebuffer(gl::FRAMEBUFFER, m_defer_fbo_handle);
@@ -89,15 +99,20 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
 
 DeferredRenderer::DeferredRenderer(DeferredRenderer&& dr): m_res_x{dr.m_res_x}, m_res_y{dr.m_res_y},
                   m_sp_osm{std::move(dr.m_sp_osm)}, m_sp_gbuf{std::move(dr.m_sp_gbuf)},
-                  m_sp_shade{std::move(dr.m_sp_shade)}, m_hal_tbo{std::move(dr.m_hal_tbo)},
-                  m_uniform_mngr{std::move(dr.m_uniform_mngr)}, m_ppl_OSM{std::move(dr.m_ppl_OSM)},
-                  m_vpl_OSM{std::move(dr.m_vpl_OSM)}, m_defer_fbo_handle{dr.m_defer_fbo_handle},
+                  m_sp_shade_surface{std::move(dr.m_sp_shade_surface)},
+                  m_sp_shade_volume{std::move(dr.m_sp_shade_volume)},
+                  m_hal_tbo{std::move(dr.m_hal_tbo)},
+                  m_uni_mngr_surf{std::move(dr.m_uni_mngr_surf)},
+                  m_uni_mngr_vol{std::move(dr.m_uni_mngr_vol)},
+                  m_ppl_OSM{std::move(dr.m_ppl_OSM)}, m_vpl_OSM{std::move(dr.m_vpl_OSM)},
+                  m_defer_fbo_handle{dr.m_defer_fbo_handle},
                   m_depth_rbo_handle{dr.m_depth_rbo_handle},
                   m_ss_quad_va{std::move(dr.m_ss_quad_va)},
                   m_tex_accum{std::move(m_tex_accum)},
                   m_tex_w_pos{std::move(dr.m_tex_w_pos)},
                   m_tex_w_norm{std::move(dr.m_tex_w_norm)},
-                  m_tex_mat_id{std::move(dr.m_tex_mat_id)} {
+                  m_tex_mat_id{std::move(dr.m_tex_mat_id)},
+                  m_tex_fog_dist{std::move(dr.m_tex_fog_dist)} {
     // Mark as moved
     dr.m_defer_fbo_handle = 0;
 }
@@ -122,14 +137,17 @@ DeferredRenderer::~DeferredRenderer() {
     }
 }
 
-const GLSLProgram& DeferredRenderer::getShadingProgram() const {
-    return m_sp_shade;
-}
-
-const GLSLProgram& DeferredRenderer::getGBufProgram() const {
+const GLSLProgram& DeferredRenderer::gBufferSP() const {
     return m_sp_gbuf;
 }
 
+const GLSLProgram& DeferredRenderer::surfaceSP() const {
+    return m_sp_shade_surface;
+}
+
+const GLSLProgram& DeferredRenderer::volumeSP() const {
+    return m_sp_shade_volume;
+}
 
 void DeferredRenderer::updateLights(const Scene& scene, const vec3& target,
                                     LightArray<PPL>& ppls, LightArray<VPL>& vpls) {
@@ -159,34 +177,46 @@ void DeferredRenderer::generateShadowMaps(const Scene& scene, const mat4& model_
 }
 
 void DeferredRenderer::generateGBuffer(const Scene& scene) const {
-    m_sp_gbuf.use();
     // Clear framebuffer
     gl::BindFramebuffer(gl::FRAMEBUFFER, m_defer_fbo_handle);
     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-    // Set culling, depth testing & viewport
+    // Set culling, depth test & viewport
     gl::CullFace(gl::BACK);
     gl::Enable(gl::DEPTH_TEST);
     gl::Viewport(0, 0, m_res_x, m_res_y);
+    // Install the shader program
+    m_sp_gbuf.use();
     // Render
     scene.render();
 }
 
 void DeferredRenderer::shade(const int tri_buf_idx) const {
-    m_sp_shade.use();
-    // Set dynamic uniforms
-    m_uniform_mngr.setUniformValues(settings.gi_enabled, settings.clamp_r_sq,
-                                    settings.exposure, settings.frame_num,
-                                    settings.gi_enabled ? settings.max_num_vpls : 0,
-                                    settings.sca_k, settings.abs_k + settings.sca_k,
-                                    settings.sca_k / (settings.abs_k + settings.sca_k),
-                                    tri_buf_idx);
     // Clear framebuffer
     gl::BindFramebuffer(gl::FRAMEBUFFER, DEFAULT_FBO);
     gl::Clear(gl::COLOR_BUFFER_BIT);
-    // Set culling, depth testing & viewport
+    // Set culling, depth test & viewport
     gl::CullFace(gl::BACK);
     gl::Disable(gl::DEPTH_TEST);
     gl::Viewport(0, 0, m_res_x, m_res_y);
-    // Render
+    /* Perform surface shading */
+    m_sp_shade_surface.use();
+    // Set dynamic uniforms
+    m_uni_mngr_surf.setUniformValues(settings.gi_enabled, settings.clamp_r_sq, settings.exposure,
+                                     settings.frame_num, settings.max_num_vpls,
+                                     settings.abs_k + settings.sca_k,
+                                     settings.sca_k / (settings.abs_k + settings.sca_k),
+                                     tri_buf_idx);
+    // Render surfaces
+    m_ss_quad_va.draw(gl::TRIANGLE_STRIP);
+    if (0.0f == settings.abs_k + settings.sca_k) return;    // No fog to render
+    /* Perform volume shading */
+    m_sp_shade_volume.use();
+    // Set dynamic uniforms
+    m_uni_mngr_vol.setUniformValues(settings.gi_enabled, settings.clamp_r_sq, settings.exposure,
+                                    settings.frame_num, settings.max_num_vpls, settings.sca_k,
+                                    settings.abs_k + settings.sca_k,
+                                    settings.sca_k / (settings.abs_k + settings.sca_k),
+                                    tri_buf_idx);
+    // Render fog
     m_ss_quad_va.draw(gl::TRIANGLE_STRIP);
 }

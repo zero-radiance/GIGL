@@ -57,35 +57,49 @@ int main(int, char**) {
     // Set up lights
     LightArray<PPL> ppls{1};
     LightArray<VPL> vpls{MAX_N_VPLS};
-    // Set static uniforms
-    const auto& sp0 = engine.getGBufProgram();
-    sp0.use();
-    sp0.setUniformValue("model_mat",       model_mat);
-    sp0.setUniformValue("MVP",             MVP);
-    sp0.setUniformValue("norm_mat",        norm_mat);
-    const auto& sp1 = engine.getShadingProgram();
-    sp1.use();
-    sp1.setUniformValue("cam_w_pos",       cam.worldPos());
-    sp1.setUniformValue("vol_dens",        TEX_U_DENS_V);
-    sp1.setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
-    sp1.setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
-    sp1.setUniformValue("pi_dens",         TEX_U_PI_DENS);
-    sp1.setUniformValue("halton_seq",      TEX_U_HALTON);
-    sp1.setUniformValue("w_positions",     TEX_U_W_POS);
-    sp1.setUniformValue("enc_w_normals",   TEX_U_W_NORM);
-    sp1.setUniformValue("material_ids",    TEX_U_MAT_ID);
-    sp1.setUniformValue("accum_buffer",    IMG_U_ACCUM);
-    sp1.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
-    sp1.setUniformValue("fog_bounds[0]",   fog_pt_min);
-    sp1.setUniformValue("fog_bounds[1]",   fog_pt_max);
-    sp1.setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
     ppls.bind(UB_PPL_ARR);
     vpls.bind(UB_VPL_ARR);
+    // Set static uniforms
+    // Big, ugly code block - can be folded in your text editor :-)
+    {
+        engine.gBufferSP().use();
+        engine.gBufferSP().setUniformValue("model_mat",       model_mat);
+        engine.gBufferSP().setUniformValue("MVP",             MVP);
+        engine.gBufferSP().setUniformValue("norm_mat",        norm_mat);
+        engine.surfaceSP().use();
+        engine.surfaceSP().setUniformValue("cam_w_pos",       cam.worldPos());
+        engine.surfaceSP().setUniformValue("vol_dens",        TEX_U_DENS_V);
+        engine.surfaceSP().setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
+        engine.surfaceSP().setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
+        engine.surfaceSP().setUniformValue("pi_dens",         TEX_U_PI_DENS);
+        engine.surfaceSP().setUniformValue("w_positions",     TEX_U_W_POS);
+        engine.surfaceSP().setUniformValue("enc_w_normals",   TEX_U_W_NORM);
+        engine.surfaceSP().setUniformValue("material_ids",    TEX_U_MAT_ID);
+        engine.surfaceSP().setUniformValue("accum_buffer",    IMG_U_ACCUM);
+        engine.surfaceSP().setUniformValue("fog_dist",        IMG_U_FOG_DIST);
+        engine.surfaceSP().setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
+        engine.surfaceSP().setUniformValue("fog_bounds[0]",   fog_pt_min);
+        engine.surfaceSP().setUniformValue("fog_bounds[1]",   fog_pt_max);
+        engine.surfaceSP().setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
+        engine.volumeSP().use();
+        engine.volumeSP().setUniformValue("cam_w_pos",        cam.worldPos());
+        engine.volumeSP().setUniformValue("vol_dens",         TEX_U_DENS_V);
+        engine.volumeSP().setUniformValue("ppl_shadow_cube",  TEX_U_PPL_SM);
+        engine.volumeSP().setUniformValue("vpl_shadow_cube",  TEX_U_VPL_SM);
+        engine.volumeSP().setUniformValue("pi_dens",          TEX_U_PI_DENS);
+        engine.volumeSP().setUniformValue("halton_seq",       TEX_U_HALTON);
+        engine.volumeSP().setUniformValue("w_positions",      TEX_U_W_POS);
+        engine.volumeSP().setUniformValue("accum_buffer",     IMG_U_ACCUM);
+        engine.volumeSP().setUniformValue("fog_dist",         IMG_U_FOG_DIST);
+        engine.volumeSP().setUniformValue("inv_max_dist_sq",  invSq(MAX_DIST));
+        engine.volumeSP().setUniformValue("fog_bounds[0]",    fog_pt_min);
+        engine.volumeSP().setUniformValue("fog_bounds[1]",    fog_pt_max);
+        engine.volumeSP().setUniformValue("inv_fog_dims",     1.0f / (fog_pt_max - fog_pt_min));
+    }
     // Init dynamic uniforms
     InputHandler::init(&engine.settings);
     // Create a ring-triple-buffer lock manager
     GLRTBLockMngr rtb_lock_mngr;
-    int tri_buf_idx = 0;
     /* Rendering loop */
     while (!window.shouldClose()) {
         // Start frame timing
@@ -104,12 +118,11 @@ int main(int, char**) {
         engine.generateGBuffer(*scene);
         // Perform shading
         const uint t3{HighResTimer::time_ms()};
-        engine.shade(tri_buf_idx);
+        engine.shade(rtb_lock_mngr.getActiveBufIdx());
         // Switch to the next buffer
         rtb_lock_mngr.lockBuffer();
         ppls.switchToNextBuffer();
         vpls.switchToNextBuffer();
-        tri_buf_idx = (tri_buf_idx + 1) % 3;
         // Prepare to draw the next frame
         engine.settings.frame_num++;
         window.refresh();
@@ -124,5 +137,6 @@ int main(int, char**) {
         }
         window.setTitle(title);
     }
+    delete scene;
     return 0;
 }

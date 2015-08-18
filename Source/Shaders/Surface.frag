@@ -1,9 +1,7 @@
 #version 440
 
-#define PI            3.14159274        // π
 #define INV_PI        0.318309873       // 1 / π
 #define CAM_RES       800               // Camera sensor resolution
-#define GAMMA         2.2333333         // Gamma value for gamma correction
 #define HG_G          0.25              // Henyey-Greenstein scattering asymmetry parameter
 #define OFFSET        0.001             // Shadow mapping offset
 #define R_M_INTERVALS 8                 // Number of ray marching intervals
@@ -13,6 +11,7 @@
 #define MAX_VPLS      150               // Max. number of secondary lights
 #define MAX_FRAMES    30                // Max. number of frames before convergence is achieved
 #define MAX_SAMPLES   24                // Max. number of samples per pixel
+#define SAFE          coherent restrict // No data races
 
 struct Material {
     vec3  k_d;                          // Diffuse coefficient
@@ -40,8 +39,6 @@ struct VirtualPointLight {
 };
 
 // Vars IN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-layout (early_fragment_tests) in;       // Force early Z-test (prior to fragment shader)
 
 layout (std140, binding = 0)
 uniform Materials {
@@ -74,7 +71,6 @@ uniform sampler3D     vol_dens;         // Normalized volume density (3D texture
 uniform sampler3D     pi_dens;          // Preintegrated fog density values
 uniform vec3          fog_bounds[2];    // Minimal and maximal bounding points of fog volume
 uniform vec3          inv_fog_dims;     // Inverse of fog dimensions
-uniform float         sca_k;            // Scattering coefficient per unit density
 uniform float         ext_k;            // Extinction coefficient per unit density
 uniform float         sca_albedo;       // Probability of photon being scattered
 uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
@@ -85,8 +81,8 @@ uniform int           frame_id;         // Frame index, is set to zero on reset
 uniform int           exposure;         // Exposure time for basic brightness control
 uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
-uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_SAMPLES
-uniform coherent restrict layout(rgba32f) image2D accum_buffer; // Accumulation buffer
+uniform SAFE layout(rgba32f) image2D accum_buffer;      // Accumulation buffer
+uniform SAFE writeonly layout(rg32f) image2D fog_dist;  // Primary ray entry/exit distances
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -111,20 +107,17 @@ vec3 invLambertAzimEAProj(const vec2 n) {
 
 // Returns fragment's position in world space
 vec3 getWorldPos() {
-    //return texture(w_positions, tex_coord).rgb;
     return texelFetch(w_positions, ivec2(gl_FragCoord.xy), 0).rgb;
 }
 
 // Returns fragment's normal in world space
 vec3 getWorldNorm() {
-    //const vec2 enc_norm = texture(enc_w_normals, tex_coord).rg;
     const vec2 enc_norm = texelFetch(enc_w_normals, ivec2(gl_FragCoord.xy), 0).rg;
     return invLambertAzimEAProj(enc_norm);
 }
 
 // Returns fragment's material in world space
 Material getMaterial() {
-    //const uint mat_id = texture(material_ids, tex_coord).r;
     const uint mat_id = texelFetch(material_ids, ivec2(gl_FragCoord.xy), 0).r;
     return materials[mat_id];
 }
@@ -157,12 +150,6 @@ float calcFogDens(in const vec3 w_pos) {
     return texture(vol_dens, n_pos).r;
 }
 
-// Returns the scattering coefficient at the specified world space position
-float sampleScaK(in const vec3 w_pos) {
-    return sca_k * calcFogDens(w_pos);
-}
-
-
 // Returns the extinction coefficient at the specified world space position
 float sampleExtK(in const vec3 w_pos) {
     return ext_k * calcFogDens(w_pos);
@@ -190,7 +177,7 @@ float rayMarch(in const vec3 ray_o, in const vec3 ray_d,
 // Calculates transmittance using ray marching
 float calcTransm(in const vec3 samp_pt, in const vec3 dir, in const float dist_sq) {
     float transm = 1.0;
-    if (sca_k > 0.0) {
+    if (ext_k > 0.0) {
         const float max_dist = sqrt(dist_sq);
         float t_min, t_max;
         if (intersectBBox(fog_bounds, samp_pt, dir, max_dist, t_min, t_max)) {
@@ -202,30 +189,32 @@ float calcTransm(in const vec3 samp_pt, in const vec3 dir, in const float dist_s
     return transm;
 }
 
-// Evaluates Phong BRDF
-vec3 phongBRDF(in const vec3 I, in const vec3 N, in const vec3 R,
-                in const vec3 k_d, in const vec3 k_s, in const float n_s ) {
-    // Compute specular (mirror-reflected) direction
-    const vec3 S = reflect(-I, N);
-    if (n_s > 0.0 && dot(R, S) > 0.0) {
-        return k_d + k_s * pow(dot(R, S), n_s);
-    } else {
-        return k_d;
+// Evaluates the Phong BRDF
+vec3 phongBRDF(in const vec3 I, in const vec3 N, in const vec3 O,
+               in const vec3 k_d, in const vec3 k_s, in const float n_s) {
+    vec3 brdf_val = k_d;
+    if (n_s > 0.0) {
+        // Compute the specular (mirror-reflected) direction
+        const vec3 S = reflect(-I, N);    
+        if (dot(O, S) > 0.0) {
+            brdf_val += k_s * pow(dot(O, S), n_s);
+        }
     }
+    return brdf_val;
 }
 
-// Evaluates Henyey-Greenstein phase function
+// Evaluates the Henyey-Greenstein phase function
 float evalPhaseHG(in const float cos_the) {
     const float base = 1.0 + HG_G * HG_G - 2.0 * HG_G * cos_the;
     return 0.25 * INV_PI * (1.0 - HG_G * HG_G) / (base * sqrt(base));
 }
 
-// Returns radiance emitted in given direction
-vec3 calcLe(in const VirtualPointLight vpl, in const vec3 LtoP) {
+// Returns radiance emitted (scattered) by a VPL in the given direction
+vec3 computeLe(in const VirtualPointLight vpl, in const vec3 O) {
     switch (vpl.type) {
         case 1: // VPL in volume
         {
-            const float cos_the = dot(LtoP, vpl.w_inc);
+            const float cos_the = dot(O, vpl.w_inc);
             // WT implicitly accounts for extinction
             // Therefore, use scattering albedo and not scattering coefficient
             return evalPhaseHG(cos_the) * sca_albedo * vpl.intens;
@@ -233,61 +222,61 @@ vec3 calcLe(in const VirtualPointLight vpl, in const vec3 LtoP) {
         case 2: // VPL on surface
         {
             // Compute reflected radiance
-            const float cos_the_out = max(0.0, dot(LtoP,  vpl.w_norm));
-            return phongBRDF(vpl.w_inc, vpl.w_norm, LtoP, vpl.k_d, vpl.k_s, vpl.n_s) * vpl.intens * cos_the_out;
+            const float cos_the_out = max(0.0, dot(O,  vpl.w_norm));
+            return phongBRDF(vpl.w_inc, vpl.w_norm, O, vpl.k_d, vpl.k_s, vpl.n_s) * vpl.intens * cos_the_out;
         }
     }
 }
 
-// Evaluates rendering equation
-vec3 evalRE(in const vec3 I, in const vec3 O, in const vec3 Li, in const vec3 samp_pt,
-            in const bool is_surf_pt, in const Material material, in const vec3 N) {
-    if (is_surf_pt) {
+// Compute the contribution of primary point lights
+vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N, in const vec3 O,
+                    in const Material material) {
+    const vec3 d = w_pos - ppls[light_id].w_pos;
+    const float dist_sq = dot(d, d);
+    // Check OSM visibility
+    const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
+    // dist < texture(x, y, z, i) ? 1.0 : 0.0
+    const float visibility = texture(ppl_shadow_cube, vec4(d, light_id), norm_dist_sq);
+    if (visibility > 0.0) {
+        // Light is visible from the fragment
+        const vec3  I       = normalize(-d);
+        const float transm  = calcTransm(w_pos, I, dist_sq);
+        const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
+        const vec3  Li      = transm * ppls[light_id].intens * falloff;
+        // Evaluate the rendering equation
         const float cos_the_inc = max(0.0, dot(I, N));
         return phongBRDF(I, N, O, material.k_d, material.k_s, material.n_s) * Li * cos_the_inc;
     } else {
-        // Incoming direction points TOWARDS the light, so we have to reverse it
-        const float cos_the = -dot(I, O);
-        return evalPhaseHG(cos_the) * sampleScaK(samp_pt) * Li;
+        return vec3(0.0);
     }
 }
 
-// Compute contribution of primary lights
-vec3 calcPriLSContrib(in const int light_id, in const vec3 samp_pt, in const vec3 pri_ray_d,
-                      in const bool is_surf_pt, in const Material material, in const vec3 norm) {
-    vec3 LtoP = samp_pt - ppls[light_id].w_pos;
-    const float dist_sq = dot(LtoP, LtoP);
-    LtoP = normalize(LtoP);
+// Compute the contribution of VPLs
+vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N, in const vec3 O,
+                    in const Material material) {
+    const vec3 d = w_pos - vpls[light_id].w_pos;
+    const float dist_sq = dot(d, d);
     // Check OSM visibility
     const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
     // dist < texture(x, y, z, i) ? 1.0 : 0.0
-    const float visibility = texture(ppl_shadow_cube, vec4(LtoP, light_id), norm_dist_sq);
-    if (0.0 == visibility) return vec3(0.0);
-    // LS is visible from sample point
-    const float transm  = calcTransm(samp_pt, -LtoP, dist_sq);
-    const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
-    const vec3  Li      = transm * ppls[light_id].intens * falloff;
-    // Evaluate rendering equation at sample point
-    return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt, material, norm);
+    const float visibility = texture(vpl_shadow_cube, vec4(d, light_id), norm_dist_sq);
+    if (visibility > 0.0) {
+        // Light is visible from the fragment
+        const vec3  I       = normalize(-d);
+        const float transm  = calcTransm(w_pos, I, dist_sq);
+        const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
+        const vec3  Li      = transm * computeLe(vpls[light_id], -I) * falloff;
+        // Evaluate the rendering equation
+        const float cos_the_inc = max(0.0, dot(I, N));
+        return phongBRDF(I, N, O, material.k_d, material.k_s, material.n_s) * Li * cos_the_inc;
+    } else {
+        return vec3(0.0);
+    }
 }
 
-// Compute contribution of secondary lights
-vec3 calcSecLSContrib(in const int light_id, in const vec3 samp_pt, in const vec3 pri_ray_d,
-                      in const bool is_surf_pt, in const Material material, in const vec3 norm) {
-    vec3 LtoP = samp_pt - vpls[light_id].w_pos;
-    const float dist_sq = dot(LtoP, LtoP);
-    LtoP = normalize(LtoP);
-    // Check OSM visibility
-    const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
-    // dist < texture(x, y, z, i) ? 1.0 : 0.0
-    const float visibility = texture(vpl_shadow_cube, vec4(LtoP, light_id), norm_dist_sq);
-    if (0.0 == visibility) return vec3(0.0);
-    // LS is visible from sample point
-    const float transm  = calcTransm(samp_pt, -LtoP, dist_sq);
-    const float falloff = 1.0 / (clamp_rsq ? max(dist_sq, CLAMP_DIST_SQ) : dist_sq);
-    const vec3  Li      = transm * calcLe(vpls[light_id], LtoP) * falloff;
-    // Evaluate rendering equation at sample point
-    return evalRE(-LtoP, -pri_ray_d, Li, samp_pt, is_surf_pt, material, norm);
+// Saves parametric ray distances to a texture
+void recordRayDist(in const float t_min, in const float t_max) {
+    imageStore(fog_dist, ivec2(gl_FragCoord.xy), vec4(t_min, t_max, 0.0, 0.0));
 }
 
 // Returns the color value from the accumulation buffer
@@ -304,72 +293,41 @@ void main() {
     frag_col = vec4(0.0, 0.0, 0.0, 1.0);
     if (frame_id < MAX_FRAMES) {
         // Perform shading
-        Material material = getMaterial();
-        if (material.k_e != vec3(0.0)) {
-            // Return emission value
-            // TODO: account for fog
-            frag_col.rgb = material.k_e;
-        } else {
-            float transm_frag = 1.0;
-            const vec3 w_pos  = getWorldPos();
-            const vec3 ray_d  = normalize(w_pos - cam_w_pos);
-            if (sca_k > 0.0) {
+        float transm_frag = 1.0;
+        const vec3 w_pos  = getWorldPos();
+        const vec3 ray_d  = normalize(w_pos - cam_w_pos);
+        if (ext_k > 0.0) {
+            // Compute the intersection with fog volume
+            const vec3  ray_o  = cam_w_pos;
+            const float t_frag = length(w_pos - cam_w_pos);
+            float t_min, t_max;
+            if (intersectBBox(fog_bounds, ray_o, ray_d, t_frag, t_min, t_max)) {
+                t_min = max(t_min, 0.0);
+                t_max = min(t_max, t_frag);
+                // Compute transmittance from camera to fragment along primary ray
                 const vec2 xy = gl_FragCoord.xy / CAM_RES;
-                // Compute intersection with fog volume
-                const vec3  ray_o  = cam_w_pos;
-                const float t_frag = length(w_pos - cam_w_pos);
-                float t_min, t_max;
-                if (intersectBBox(fog_bounds, ray_o, ray_d, t_frag, t_min, t_max)) {
-                    t_min = max(t_min, 0.0);
-                    t_max = min(t_max, t_frag);
-                    /* Compute volume contribution */
-                    const int n_samples = gi_enabled ? MAX_SAMPLES / 4 : MAX_SAMPLES;
-                    for (int s = 0; s < n_samples; ++s) {
-                        // Compute sample position
-                        const float z = texelFetch(halton_seq, s + n_samples * frame_id).r;
-                        const float t = t_min + z * (t_max - t_min);
-                        const vec3  s_pos = ray_o + t * ray_d;
-                        // Compute transmittance on camera-to-sample interval
-                        const float opt_depth = ext_k * texture(pi_dens, vec3(xy, z)).r;
-                        const float transm = exp(-opt_depth);
-                        if (transm > 0.001) {
-                            if (clamp_rsq) {
-                                // Gather contribution of primary lights
-                                for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                                    frag_col.rgb += transm * calcPriLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
-                                }
-                            }
-                            if (gi_enabled) {
-                                // Gather contribution of secondary lights
-                                for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                                    frag_col.rgb += transm * calcSecLSContrib(i, s_pos, ray_d, false, material, vec3(0.0));
-                                }
-                            }
-                        }
-                    }
-                    // Normalize
-                    const float inv_p = t_max - t_min;
-                    frag_col.rgb *= inv_p / n_samples;
-                    // Compute transmittance from camera to fragment along primary ray
-                    const float z = (t_frag - t_min) / (t_max - t_min);
-                    const float opt_depth = ext_k * texture(pi_dens, vec3(xy, z)).r;
-                    transm_frag = exp(-opt_depth);
+                const float z = (t_frag - t_min) / (t_max - t_min);
+                const float opt_depth = ext_k * texture(pi_dens, vec3(xy, z)).r;
+                transm_frag = exp(-opt_depth);
+            } else {
+                t_min = t_max = 0.0;
+            }
+            // Record t_min and t_max values for reuse in the subsequent shader
+            recordRayDist(t_min, t_max);
+        }
+        if (transm_frag > 0.001) {
+            const vec3     w_norm   = getWorldNorm();
+            const Material material = getMaterial();
+            if (clamp_rsq) {
+                // Gather contribution of primary lights
+                for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
+                    frag_col.rgb += transm_frag * calcPplContrib(i, w_pos, w_norm, -ray_d, material);
                 }
             }
-            /* Compute surface contribution */
-            if (transm_frag > 0.001) {
-                const vec3 w_norm = getWorldNorm();
-                if (clamp_rsq) {
-                    // Gather contribution of primary lights
-                    for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                        frag_col.rgb += transm_frag * calcPriLSContrib(i, w_pos, ray_d, true, material, w_norm);
-                    }
-                }
-                if (gi_enabled) {
-                    // Gather contribution of secondary lights
-                    for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                        frag_col.rgb += transm_frag * calcSecLSContrib(i, w_pos, ray_d, true, material, w_norm);
-                    }
+            if (gi_enabled) {
+                // Gather contribution of VPLs
+                for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
+                    frag_col.rgb += transm_frag * calcVplContrib(i, w_pos, w_norm, -ray_d, material);
                 }
             }
         }
@@ -377,7 +335,7 @@ void main() {
             // Read the value from the previous frame
             const vec4 prev_color = readFromAccumBuffer();
             // Blend the colors
-            frag_col.rgb = (frag_col.rgb + frame_id * prev_color.rgb) / (frame_id + 1);
+            frag_col.rgb = (frame_id * prev_color.rgb + frag_col.rgb) / (frame_id + 1);
         }
         // Update the accumulation buffer
         writeToAccumBuffer(frag_col);

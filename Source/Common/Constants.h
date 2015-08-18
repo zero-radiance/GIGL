@@ -49,9 +49,11 @@
 #define TEX_U_W_POS    6            // World position texture
 #define TEX_U_W_NORM   7            // Normal vector texture
 #define TEX_U_MAT_ID   8            // Material id texture
+#define TEX_U_FOG_DIST 9            // Primary ray entry/exit distances for fog
 
 /* Image unit allocation */
 #define IMG_U_ACCUM    0            // Accumulation buffer texture for progressive rendering
+#define IMG_U_FOG_DIST 1            // Primary ray entry/exit distances for fog
 
 /* Uniform locations */
 #define UL_SM_MODELMAT 0            // Model matrix

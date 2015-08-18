@@ -13,6 +13,8 @@ public:
     void lockBuffer();
     // Waits for fence removal (write access)
     void waitForLockExpiration();
+    // Returns the active ring buffer index: [0..2]
+    int getActiveBufIdx() const;
 private:
     std::array<GLsync, 3> m_fences;     // Synchronization for ring-triple-buffer
     int                   m_buf_idx;    // Active ring buffer index: [0..2]

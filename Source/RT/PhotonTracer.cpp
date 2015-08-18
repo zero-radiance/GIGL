@@ -108,7 +108,7 @@ namespace rt {
                         const float sca_albedo{scene.getScaAlbedo()};
                         // Russian roulette
                         if (UnitRNG::generate() < sca_albedo) {
-                            // Scattering event; create a PL
+                            // Scattering event; create a VPL
                             const vec3 I{ray.d};
                             const vec3 vpl_intens{source.intensity() * attenuation};
                             la.addLight(VPL{n_paths - 1, event_pt, I, vpl_intens, sca_k});
