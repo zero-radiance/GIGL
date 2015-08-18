@@ -128,8 +128,7 @@ DensityField& DensityField::operator=(const DensityField& df) {
 }
 
 DensityField::DensityField(DensityField&& df): m_bbox{df.m_bbox}, m_res{df.m_res},
-                                               m_data{new GLubyte[df.size()]},
-                                               m_tex_handle{df.m_tex_handle},
+                                               m_data{df.m_data}, m_tex_handle{df.m_tex_handle},
                                                m_pi_dens_res{df.m_pi_dens_res},
                                                m_pi_dens_data{df.m_pi_dens_data},
                                                m_pi_dens_tex_handle{df.m_pi_dens_tex_handle} {

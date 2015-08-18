@@ -1,27 +1,20 @@
-#include <GLM\gtc\matrix_transform.hpp>
+#include "UI\Window.h"
+#include "UI\InputHandler.h"
 #include "Common\Constants.h"
-#include "Common\Camera.h"
-#include "Common\Random.h"
-#include "Common\Scene.h"
 #include "Common\Timer.h"
 #include "Common\Utility.hpp"
-#include "Common\Halton.hpp"
-#include "RT\PhotonTracer.h"
-#include "VPL\OmniShadowMap.hpp"
-#include "VPL\PointLight.hpp"
+#include "Common\Random.h"
+#include "Common\Camera.h"
+#include "Common\Renderer.h"
+#include "Common\Scene.h"
 #include "GL\GLShader.hpp"
-#include "GL\GLTextureBuffer.h"
-#include "GL\RTBLockMngr.h"
-#include "GL\GLUniformManager.hpp"
-#include "UI\InputHandler.h"
-#include "UI\Window.h"
+#include "GL\GLRTBLockMngr.h"
+#include "VPL\PointLight.hpp"
+#include "VPL\LightArray.hpp"
 
 using glm::vec3;
-using glm::vec4;
 using glm::mat3;
 using glm::mat4;
-using glm::min;
-using glm::normalize;
 
 Scene* scene;
 
@@ -34,10 +27,12 @@ Scene* scene;
 int main(int, char**) {
     // Randomize
     UnitRNG::init();
-    // Create window
+    // Create a window
     Window window{WINDOW_RES, WINDOW_RES};
     if (!window.isOpen()) return -1;
-    // Set up camera
+    // Set up the renderer
+    DeferredRenderer engine{WINDOW_RES, WINDOW_RES};
+    // Set up the camera
     const PerspectiveCamera cam{{278.0f, 273.0f, -800.0f},  // Position
                                 {0.0f, 0.0f, 1.0f},			// Direction
                                 {0.0f, 1.0f, 0.0f},			// Up
@@ -49,15 +44,9 @@ int main(int, char**) {
     const mat4 model_view{cam.computeModelView(model_mat)};	// Model to Camera space
     const mat4 MVP{cam.computeMVP(model_view)};			    // Model-view-projection matrix
     const mat3 norm_mat{cam.computeNormXForm(model_mat)};	// Matrix transforming normals
-    // Load shader program
-    GLSLProgram sp{};
-    sp.loadShader("Source\\Shaders\\Render.vert");
-    sp.loadShader("Source\\Shaders\\Render.frag");
-    sp.link();
-    sp.use();
-    // Load scene
+    // Load the scene
     scene = new Scene;
-    scene->loadObjects("Assets\\cornell_box.obj", sp.id());
+    scene->loadObjects("Assets\\cornell_box.obj");
     // Set up fog
     scene->addFog("Assets\\df.3dt", "Assets\\pi_df.3dt", MAJ_EXT_K, ABS_K, SCA_K, cam);
     const BBox& fog_box{scene->getFogBounds()};
@@ -65,45 +54,52 @@ int main(int, char**) {
     const vec3 fog_pt_max{fog_box.maxPt()};
     const vec3 box_top_mid{fog_pt_max - 0.5f * vec3{fog_pt_max.x - fog_pt_min.x, 0.0f,
                                                     fog_pt_max.z - fog_pt_min.z}};
-    // Set up primary lights
+    // Set up lights
     LightArray<PPL> ppls{1};
-    PPL prim_pl{PRIM_PL_POS, PRIM_PL_INTENS};
-    ppls.addLight(prim_pl);
-    OmniShadowMap ppl_OSM{PRI_SM_RES, 1, MAX_DIST, TEX_U_PPL_SM};
-    // Declare VPLs
     LightArray<VPL> vpls{MAX_N_VPLS};
-    OmniShadowMap vpl_OSM{SEC_SM_RES, MAX_N_VPLS, MAX_DIST, TEX_U_VPL_SM};
-    // Create a Halton sequence buffer object
-    static const GLuint seq_sz{30 * 24};   // 30 frames with at most 24 samples per frame
-    GLfloat hal_seq[seq_sz];
-    HaltonSG::generate<2>(hal_seq);
-    GLTextureBuffer hal_tbo{TEX_U_HALTON, gl::R32F, sizeof(hal_seq), hal_seq};
-    // Set static uniforms
-    sp.setUniformValue("cam_w_pos",       cam.worldPos());
-    sp.setUniformValue("vol_dens",        TEX_U_DENS_V);
-    sp.setUniformValue("pi_dens",         TEX_U_PI_DENS);
-    sp.setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
-    sp.setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
-    sp.setUniformValue("accum_buffer",    TEX_U_ACCUM);
-    sp.setUniformValue("halton_seq",      TEX_U_HALTON);
-    sp.setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
-    sp.setUniformValue("fog_bounds[0]",   fog_pt_min);
-    sp.setUniformValue("fog_bounds[1]",   fog_pt_max);
-    sp.setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
-    sp.setUniformValue("model_mat",       model_mat);
-    sp.setUniformValue("MVP",             MVP);
-    sp.setUniformValue("norm_mat",        norm_mat);
     ppls.bind(UB_PPL_ARR);
     vpls.bind(UB_VPL_ARR);
+    // Set static uniforms
+    // Big, ugly code block - can be folded in your text editor :-)
+    {
+        engine.gBufferSP().use();
+        engine.gBufferSP().setUniformValue("model_mat",       model_mat);
+        engine.gBufferSP().setUniformValue("MVP",             MVP);
+        engine.gBufferSP().setUniformValue("norm_mat",        norm_mat);
+        engine.surfaceSP().use();
+        engine.surfaceSP().setUniformValue("cam_w_pos",       cam.worldPos());
+        engine.surfaceSP().setUniformValue("vol_dens",        TEX_U_DENS_V);
+        engine.surfaceSP().setUniformValue("ppl_shadow_cube", TEX_U_PPL_SM);
+        engine.surfaceSP().setUniformValue("vpl_shadow_cube", TEX_U_VPL_SM);
+        engine.surfaceSP().setUniformValue("pi_dens",         TEX_U_PI_DENS);
+        engine.surfaceSP().setUniformValue("w_positions",     TEX_U_W_POS);
+        engine.surfaceSP().setUniformValue("enc_w_normals",   TEX_U_W_NORM);
+        engine.surfaceSP().setUniformValue("material_ids",    TEX_U_MAT_ID);
+        engine.surfaceSP().setUniformValue("accum_buffer",    IMG_U_ACCUM);
+        engine.surfaceSP().setUniformValue("fog_dist",        IMG_U_FOG_DIST);
+        engine.surfaceSP().setUniformValue("inv_max_dist_sq", invSq(MAX_DIST));
+        engine.surfaceSP().setUniformValue("fog_bounds[0]",   fog_pt_min);
+        engine.surfaceSP().setUniformValue("fog_bounds[1]",   fog_pt_max);
+        engine.surfaceSP().setUniformValue("inv_fog_dims",    1.0f / (fog_pt_max - fog_pt_min));
+        engine.volumeSP().use();
+        engine.volumeSP().setUniformValue("cam_w_pos",        cam.worldPos());
+        engine.volumeSP().setUniformValue("vol_dens",         TEX_U_DENS_V);
+        engine.volumeSP().setUniformValue("ppl_shadow_cube",  TEX_U_PPL_SM);
+        engine.volumeSP().setUniformValue("vpl_shadow_cube",  TEX_U_VPL_SM);
+        engine.volumeSP().setUniformValue("pi_dens",          TEX_U_PI_DENS);
+        engine.volumeSP().setUniformValue("halton_seq",       TEX_U_HALTON);
+        engine.volumeSP().setUniformValue("w_positions",      TEX_U_W_POS);
+        engine.volumeSP().setUniformValue("accum_buffer",     IMG_U_ACCUM);
+        engine.volumeSP().setUniformValue("fog_dist",         IMG_U_FOG_DIST);
+        engine.volumeSP().setUniformValue("inv_max_dist_sq",  invSq(MAX_DIST));
+        engine.volumeSP().setUniformValue("fog_bounds[0]",    fog_pt_min);
+        engine.volumeSP().setUniformValue("fog_bounds[1]",    fog_pt_max);
+        engine.volumeSP().setUniformValue("inv_fog_dims",     1.0f / (fog_pt_max - fog_pt_min));
+    }
     // Init dynamic uniforms
-    RenderParams params;
-    InputHandler::init(&params);
-    int tri_buf_idx = 0;
-    GLUniformManager<9> uniform_mngr{sp, {"gi_enabled", "clamp_rsq", "exposure", "frame_id",
-                                          "n_vpls", "sca_k", "ext_k", "sca_albedo",
-                                          "tri_buf_idx"}};
-    // Create ring-triple-buffer lock manager
-    RTBLockMngr rtb_lock_mngr;
+    InputHandler::init(&engine.settings);
+    // Create a ring-triple-buffer lock manager
+    GLRTBLockMngr rtb_lock_mngr;
     /* Rendering loop */
     while (!window.shouldClose()) {
         // Start frame timing
@@ -112,53 +108,35 @@ int main(int, char**) {
         InputHandler::updateParams(window.get());
         // Wait for buffer write access
         rtb_lock_mngr.waitForLockExpiration();
-        // Update primary lights
-        ppls.reset();
-        prim_pl.setWPos(params.ppl_w_pos);
-        ppls.addLight(prim_pl);
-        // Update VPLs
-        if (params.gi_enabled) {
-            const vec3 shoot_dir{normalize(box_top_mid - prim_pl.wPos())};
-            rt::PhotonTracer::trace(prim_pl, shoot_dir, params.max_num_vpls, vpls);
-            // Disable GI on VPL tracing failure
-            params.gi_enabled = params.gi_enabled && !vpls.isEmpty();
-        }
+        // Update the lights
+        engine.updateLights(*scene, box_top_mid, ppls, vpls);
         // Generate shadow maps
-        gl::CullFace(gl::FRONT);
         const uint t1{HighResTimer::time_ms()};
-        ppl_OSM.generate(*scene, ppls, model_mat);
-        if (params.gi_enabled) vpl_OSM.generate(*scene, vpls, model_mat);
-        // Set dynamic uniforms
-        sp.use();
-        uniform_mngr.setUniformValues(params.gi_enabled, params.clamp_r_sq,
-                                      params.exposure, params.frame_num,
-                                      min(vpls.size(), params.max_num_vpls),
-                                      params.sca_k, params.abs_k + params.sca_k,
-                                      params.sca_k / (params.abs_k + params.sca_k),
-                                      tri_buf_idx);
-        // RENDER
-        gl::CullFace(gl::BACK);
+        engine.generateShadowMaps(*scene, model_mat, ppls, vpls);
+        // Generate a G-buffer
         const uint t2{HighResTimer::time_ms()};
-        window.clear();
-        scene->render();
+        engine.generateGBuffer(*scene);
+        // Perform shading
+        const uint t3{HighResTimer::time_ms()};
+        engine.shade(rtb_lock_mngr.getActiveBufIdx());
         // Switch to the next buffer
         rtb_lock_mngr.lockBuffer();
         ppls.switchToNextBuffer();
         vpls.switchToNextBuffer();
-        tri_buf_idx = (tri_buf_idx + 1) % 3;
         // Prepare to draw the next frame
+        engine.settings.frame_num++;
         window.refresh();
-        params.frame_num += 1;
         // Display frame time
-        const uint t3{HighResTimer::time_ms()};
+        const uint t4{HighResTimer::time_ms()};
         char title[TITLE_LEN];
-        if (params.frame_num <= 30) {
-            sprintf_s(title, TITLE_LEN, "GLGI (Render: %u ms | SM: %u ms | Misc: %u ms)",
-                      t3 - t2, t2 - t1, t1 - t0);
+        if (engine.settings.frame_num <= 30) {
+            sprintf_s(title, TITLE_LEN, "GLGI (Shade: %u ms | GBuf: %u ms | SM: %u ms | PT: %u ms)",
+                      t4 - t3, t3 - t2, t2 - t1, t1 - t0);
         } else {
             sprintf_s(title, TITLE_LEN, "GLGI (done)");
         }
         window.setTitle(title);
     }
+    delete scene;
     return 0;
 }

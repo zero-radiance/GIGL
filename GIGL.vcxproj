@@ -114,6 +114,7 @@
     <ClCompile Include="Source\Common\BBox.cpp" />
     <ClCompile Include="Source\Common\Camera.cpp" />
     <ClCompile Include="Source\Common\Random.cpp" />
+    <ClCompile Include="Source\Common\Renderer.cpp" />
     <ClCompile Include="Source\Common\Scene.cpp" />
     <ClCompile Include="Source\Common\Timer.cpp" />
     <ClCompile Include="Source\Fog\DensityField.cpp" />
@@ -124,7 +125,7 @@
     <ClCompile Include="Source\GL\GLTextureBuffer.cpp" />
     <ClCompile Include="Source\GL\GLUniformBuffer.cpp" />
     <ClCompile Include="Source\GL\GLVertArray.cpp" />
-    <ClCompile Include="Source\GL\RTBLockMngr.cpp" />
+    <ClCompile Include="Source\GL\GLRTBLockMngr.cpp" />
     <ClCompile Include="Source\Include\OpenGL\gl_core_4_4.cpp" />
     <ClCompile Include="Source\Include\TinyOBJ\tiny_obj_loader.cc" />
     <ClCompile Include="Source\RT\PhotonTracer.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="Source\Common\Halton.hpp" />
     <ClInclude Include="Source\Common\Interpolation.hpp" />
     <ClInclude Include="Source\Common\Random.h" />
+    <ClInclude Include="Source\Common\Renderer.h" />
     <ClInclude Include="Source\Common\Scene.h" />
     <ClInclude Include="Source\Common\Timer.h" />
     <ClInclude Include="Source\Common\Utility.hpp" />
@@ -152,12 +154,14 @@
     <ClInclude Include="Source\GL\GLPersistentBuffer.hpp" />
     <ClInclude Include="Source\GL\GLShader.h" />
     <ClInclude Include="Source\GL\GLShader.hpp" />
+    <ClInclude Include="Source\GL\GLTexture2D.h" />
+    <ClInclude Include="Source\GL\GLTexture2D.hpp" />
     <ClInclude Include="Source\GL\GLTextureBuffer.h" />
     <ClInclude Include="Source\GL\GLUniformBuffer.h" />
     <ClInclude Include="Source\GL\GLUniformManager.h" />
     <ClInclude Include="Source\GL\GLUniformManager.hpp" />
     <ClInclude Include="Source\GL\GLVertArray.h" />
-    <ClInclude Include="Source\GL\RTBLockMngr.h" />
+    <ClInclude Include="Source\GL\GLRTBLockMngr.h" />
     <ClInclude Include="Source\Include\GLFW\glfw3.h" />
     <ClInclude Include="Source\Include\GLFW\glfw3native.h" />
     <ClInclude Include="Source\Include\GLM\common.hpp" />
@@ -181,11 +185,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
-    <None Include="Source\Shaders\Render.frag" />
-    <None Include="Source\Shaders\Render.vert" />
+    <None Include="Source\Shaders\GBuffer.frag" />
+    <None Include="Source\Shaders\GBuffer.vert" />
+    <None Include="Source\Shaders\Shade.vert" />
     <None Include="Source\Shaders\Shadow.frag" />
     <None Include="Source\Shaders\Shadow.geom" />
     <None Include="Source\Shaders\Shadow.vert" />
+    <None Include="Source\Shaders\Surface.frag" />
+    <None Include="Source\Shaders\Volume.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

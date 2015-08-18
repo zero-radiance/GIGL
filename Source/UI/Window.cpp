@@ -1,9 +1,9 @@
 #include "Window.h"
 #include <cassert>
 #include <OpenGL\gl_core_4_4.hpp>
-#include <GLFW\glfw3.h>
 #include "..\Common\Constants.h"
 #include "..\Common\Utility.hpp"
+#include <GLFW\glfw3.h>
 
 static inline void errorCallback(const int, const char* const msg) {
     printError(msg);
@@ -19,8 +19,8 @@ static inline void keyCallback(GLFWwindow* const wnd, const int key, const int,
 static inline void APIENTRY debugCallback(const GLenum source, const GLenum type, const GLuint id,
                                           const GLenum severity, const GLsizei,
                                           const GLchar* const msg, const void* const) {
-    // Remove "Buffer detailed info" spam
-    if (strstr(msg, "Buffer detailed info")) return;
+    // Remove "detailed info" spam
+    if (strstr(msg, "detailed info")) return;
     // Convert Enums to strings
     char src_str[15];
     switch (source) {
@@ -93,7 +93,6 @@ static inline void APIENTRY debugCallback(const GLenum source, const GLenum type
             break;
         default:
             strcpy(severity_str, "UNKNOWN");
-            return;
     }
     // Print error information
     printError("%s message: %s[ %s ] ( %d ): %s\n", src_str, type_str, severity_str, id, msg);
@@ -113,13 +112,13 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    // Request 32-bit floating-point RGB framebuffer
-    glfwWindowHint(GLFW_SRGB_CAPABLE, FALSE);
-    glfwWindowHint(GLFW_RED_BITS, 32);
-    glfwWindowHint(GLFW_GREEN_BITS, 32);
-    glfwWindowHint(GLFW_BLUE_BITS, 32);
+    // Request an sRGB8 framebuffer without a depth buffer
+    glfwWindowHint(GLFW_SRGB_CAPABLE, TRUE);
+    glfwWindowHint(GLFW_RED_BITS,   8);
+    glfwWindowHint(GLFW_GREEN_BITS, 8);
+    glfwWindowHint(GLFW_BLUE_BITS,  8);
     glfwWindowHint(GLFW_ALPHA_BITS, 0);
-    glfwWindowHint(GLFW_DEPTH_BITS, 24);
+    glfwWindowHint(GLFW_DEPTH_BITS, 0);
     #ifdef _DEBUG
         // Enable debug messages
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
@@ -145,8 +144,9 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
         glfwTerminate();
         TERMINATE();
     }
-    gl::Enable(gl::DEPTH_TEST);		// Perform depth test
-    gl::Enable(gl::CULL_FACE);		// Cull incorrectly-facing triangles (front or back)
+    gl::Enable(gl::FRAMEBUFFER_SRGB);   // Enable sRGB framebuffer support
+    gl::Enable(gl::CULL_FACE);		    // Cull incorrectly-facing triangles (front or back)
+    gl::Disable(gl::DITHER);            // Disable dithering
     #ifdef _DEBUG
         // Set debug callback
         gl::DebugMessageCallback(debugCallback, nullptr);
@@ -163,20 +163,6 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
         TERMINATE();
     }
     printInfo("OpenGL version: %s.", version);
-    // Create accumulation buffer texture
-    gl::ActiveTexture(gl::TEXTURE0 + TEX_U_ACCUM);
-    // Allocate texture storage
-    gl::GenTextures(1, &m_tex_handle);
-    gl::BindTexture(gl::TEXTURE_2D, m_tex_handle);
-    gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGB32F, m_res_x, m_res_y, 0, gl::RGB, gl::FLOAT, nullptr);
-    // No mipmaps
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAX_LEVEL, 0);
-    // No filtering
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
-    // Use border-clamping for both dimensions
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_BORDER);
-    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_BORDER);
 }
 
 Window::Window(Window&& wnd): m_window{wnd.m_window}, m_res_x{wnd.m_res_x}, m_res_y{wnd.m_res_y},
@@ -215,25 +201,13 @@ const bool Window::isOpen() const {
     return m_is_ok;
 }
 
-void Window::clear() const {
-    gl::Viewport(0, 0, m_res_x, m_res_y);
-    gl::BindFramebuffer(gl::FRAMEBUFFER, DEFAULT_FBO);
-    gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-    glfwSetTime(0);
-}
-
 bool Window::shouldClose() const {
     return (0 != glfwWindowShouldClose(m_window));
 }
 
 void Window::refresh() {
-    // Copy framebuffer contents to texture
-    gl::BindFramebuffer(gl::READ_FRAMEBUFFER, DEFAULT_FBO);
-    gl::BindTexture(gl::TEXTURE_2D, m_tex_handle);
-    gl::CopyTexImage2D(gl::TEXTURE_2D, 0, gl::RGB32F, 0, 0, m_res_x, m_res_y, 0);
     // Swap buffers
     glfwSwapBuffers(m_window);
-    glfwPollEvents();
 }
 
 void Window::setTitle(const char* const title) {

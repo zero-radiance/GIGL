@@ -3,6 +3,7 @@
 #include <GLM\gtx\normal.hpp>
 #include "Constants.h"
 #include "..\RT\KdTree.hpp"
+#include "..\GL\GLPersistentBuffer.hpp"
 
 using glm::vec3;
 using glm::uvec3;
@@ -10,15 +11,14 @@ using glm::normalize;
 
 CONSTEXPR uint	  n_mesh_attr         = 2;		        // Position, normal
 CONSTEXPR GLsizei mesh_attr_lengths[] = {3, 3};         // vec3, vec3
-CONSTEXPR uint	  n_mat_attr          = 4;			    // k_d, k_s, n_s, emission
-CONSTEXPR GLchar* mat_attr_names[]    = {"MaterialInfo.k_d", "MaterialInfo.k_s",
-                                         "MaterialInfo.n_s", "MaterialInfo.k_e"};
-CONSTEXPR uint    mat_attr_byte_sz[]  = {sizeof(vec3), sizeof(vec3), sizeof(GLfloat), sizeof(vec3)};
 
-Scene::Scene(): m_geom_va{1, mesh_attr_lengths}, m_fog_vol{nullptr},
-                m_fog_enabled{false}, m_kd_tree{nullptr} {}
+Scene::Scene(): m_geom_va{1, mesh_attr_lengths},
+                m_material_pbo{MAX_MATERIALS * sizeof(rt::PhongMaterial)},
+                m_fog_vol{nullptr}, m_fog_enabled{false}, m_kd_tree{nullptr} {
+    m_material_pbo.bind(UB_MAT_ARR);
+}
 
-void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
+void Scene::loadObjects(const char* const file_name) {
     // Copy path from filename
     const char* const last_backslash_pos{strrchr(file_name, '\\')};
     const auto path_len = last_backslash_pos - file_name + 1;    // + 1 for '\\'
@@ -42,6 +42,7 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
     uint global_vert_offset{0};
     uint object_vert_offset{0};
     Object* curr_object{nullptr};
+    uint    curr_mat_id{0};
     const std::string* curr_mat_name{nullptr};
     for (auto s = shapes.begin(); s != shapes.end(); ++s) {
         const uint vert_count{static_cast<uint>(s->mesh.positions.size()) / 3};
@@ -85,6 +86,7 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
         if (!curr_mat_name || *curr_mat_name != s->material.name) {
             // New material => new object
             if (curr_mat_name) {
+                ++curr_mat_id;
                 // Buffer the previous object
                 m_objects.back().va.buffer();
                 m_objects.back().ebo.buffer();
@@ -93,8 +95,7 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
             // Create a new object
             GLVertArray		va{n_mesh_attr, mesh_attr_lengths};
             GLElementBuffer ebo{};
-            GLUniformBuffer ubo{"MaterialInfo", n_mat_attr, mat_attr_names, prog_handle};
-            m_objects.emplace_back(std::move(va), std::move(ebo), std::move(ubo));
+            m_objects.emplace_back(curr_mat_id, std::move(va), std::move(ebo));
             curr_object = &m_objects[m_objects.size() - 1];
             object_vert_offset = 0;
             // Set material properties
@@ -111,14 +112,9 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
             const vec3    k_s{rho_s * (n_s + 2.0f) * 0.5f * INV_PI};
             const vec3    k_e{s->material.emission[0], s->material.emission[1],
                               s->material.emission[2]};
-            // Buffer material data
-            const GLfloat matData[] = {k_d.r, k_d.g, k_d.b,
-                                       k_s.r, k_s.g, k_s.b,
-                                       n_s,
-                                       k_e.r, k_e.g, k_e.b};
-            curr_object->ubo.buffer(mat_attr_byte_sz, matData);
-            // Store coefficients for raytracing
-            m_materials.emplace_back(k_d, k_s, n_s, k_e);
+            // Store material coefficients
+            auto* materials = static_cast<rt::PhongMaterial*>(m_material_pbo.data());
+            materials[curr_mat_id] = rt::PhongMaterial{k_d, k_s, n_s, k_e};
         }
         auto& object_va  = curr_object->va;
         auto& object_ebo = curr_object->ebo;
@@ -153,7 +149,7 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
             const uvec3 vert = {start_idx + s->mesh.indices[k],
                                 start_idx + s->mesh.indices[k + 1],
                                 start_idx + s->mesh.indices[k + 2]};
-            m_triangles.emplace_back(vert, static_cast<uint>(m_materials.size() - 1));
+            m_triangles.emplace_back(vert, curr_mat_id);
         }
         object_vert_offset += vert_count;
         global_vert_offset += vert_count;
@@ -162,9 +158,8 @@ void Scene::loadObjects(const char* const file_name, const GLuint prog_handle) {
     m_kd_tree = std::make_unique<rt::KdTri>(m_triangles, 10, 1, 30, 2);
 }
 
-Scene::Object::Object(GLVertArray&& va, GLElementBuffer&& ebo, GLUniformBuffer&& ubo):
-               va{std::forward<GLVertArray>(va)}, ebo{std::forward<GLElementBuffer>(ebo)},
-               ubo{std::forward<GLUniformBuffer>(ubo)} {}
+Scene::Object::Object(const uint material_id, GLVertArray&& va, GLElementBuffer&& ebo):
+               mat_id{material_id}, va{std::move(va)}, ebo{std::move(ebo)} {}
 
 void Scene::addFog(const char* const dens_file_name, const char* const pi_dens_file_name,
                    const float maj_ext_k, const float abs_k, const float sca_k,
@@ -207,7 +202,8 @@ const vec3& Scene::getVertex(const uint index) const {
 }
 
 const rt::PhongMaterial* Scene::getMaterial(const uint index) const {
-    return &m_materials[index];
+    const auto* materials = static_cast<const rt::PhongMaterial*>(m_material_pbo.data());
+    return &materials[index];
 }
 
 float Scene::sampleScaK(const vec3& pos) const {
@@ -259,7 +255,7 @@ void Scene::render(const bool ignore_materials) const {
         m_geom_ebo.draw(m_geom_va);
     } else {
         for (const auto& obj : m_objects) {
-            obj.ubo.bind(UB_MAT_INFO);
+            gl::Uniform1i(UL_GB_MAT_ID, obj.mat_id);
             obj.ebo.draw(obj.va);
         }
     }

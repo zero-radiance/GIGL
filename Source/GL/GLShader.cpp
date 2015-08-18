@@ -88,7 +88,8 @@ GLSLProgram& GLSLProgram::operator=(const GLSLProgram& sp) {
 }
 
 GLSLProgram::GLSLProgram(GLSLProgram&& sp): m_handle{sp.m_handle}, m_is_ok{sp.m_is_ok},
-                                            m_is_linked{sp.m_is_linked}, m_shaders(sp.m_shaders) {
+                                            m_is_linked{sp.m_is_linked},
+                                            m_shaders(std::move(sp.m_shaders)) {
     assert(sp.isValid());
     // Mark as moved
     sp.m_handle = 0;

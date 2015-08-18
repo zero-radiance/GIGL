@@ -70,9 +70,11 @@ namespace rt {
         float nS() const;
     private:
         glm::vec3 m_k_d;			// Diffuse coefficient
+        uint8_t   pad[4];           // 4 byte padding
         glm::vec3 m_k_s;			// Specular coefficient
         float	  m_n_s;			// Specular exponent
         glm::vec3 m_k_e;	        // Emission [coefficient]
+        uint8_t   slack[4];         // 4 byte padding
     };
 
     /* Ray class with origin o and direction d */

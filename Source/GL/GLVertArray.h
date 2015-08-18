@@ -21,8 +21,8 @@ public:
     void loadData(const GLuint attr_id, const size_t n_elems, const GLfloat* const data);
     // Copies preloaded data to GPU
     void buffer();
-    // Draws vertex array
-    void draw() const;
+    // Draws vertex array in specified a mode (such as gl::TRIANGLES)
+    void draw(const GLenum mode) const;
 private:
     /* Vertex Buffer Object */
     struct VertBuffer {

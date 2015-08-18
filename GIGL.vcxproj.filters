@@ -75,9 +75,6 @@
     <ClCompile Include="Source\GL\GLVertArray.cpp">
       <Filter>GL</Filter>
     </ClCompile>
-    <ClCompile Include="Source\GL\RTBLockMngr.cpp">
-      <Filter>GL</Filter>
-    </ClCompile>
     <ClCompile Include="Source\RT\PhotonTracer.cpp">
       <Filter>RT</Filter>
     </ClCompile>
@@ -102,6 +99,12 @@
     </ClCompile>
     <ClCompile Include="Source\GL\GLElementBuffer.cpp">
       <Filter>GL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GL\GLRTBLockMngr.cpp">
+      <Filter>GL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\Renderer.cpp">
+      <Filter>Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -186,9 +189,6 @@
     <ClInclude Include="Source\GL\GLVertArray.h">
       <Filter>GL</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GL\RTBLockMngr.h">
-      <Filter>GL</Filter>
-    </ClInclude>
     <ClInclude Include="Source\RT\KdTree.h">
       <Filter>RT</Filter>
     </ClInclude>
@@ -234,14 +234,20 @@
     <ClInclude Include="Source\GL\GLElementBuffer.h">
       <Filter>GL</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GL\GLTexture2D.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLTexture2D.hpp">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GL\GLRTBLockMngr.h">
+      <Filter>GL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Renderer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source\Shaders\Render.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Source\Shaders\Render.vert">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Source\Shaders\Shadow.frag">
       <Filter>Shaders</Filter>
     </None>
@@ -252,5 +258,20 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include=".gitignore" />
+    <None Include="Source\Shaders\GBuffer.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\GBuffer.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Shade.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Surface.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Source\Shaders\Volume.frag">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

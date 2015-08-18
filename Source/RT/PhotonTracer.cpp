@@ -13,8 +13,6 @@ using glm::dot;
 using glm::min;
 using glm::max;
 
-extern Scene* scene;
-
 namespace rt {
     // This function generates a random direction on the unit hemisphere.
     // Distribution is uniform.
@@ -61,8 +59,9 @@ namespace rt {
     }
 
     // Calculates distance to next event within medium using Woodcock tracking algorithm
-    static inline bool calcEventDistWT(const rt::Ray& ray, float& d_event, float& p_event) {
-        const float maj_ext_k{scene->getMajExtK()};
+    static inline bool calcEventDistWT(const Scene& scene, const rt::Ray& ray,
+                                       float& d_event, float& p_event) {
+        const float maj_ext_k{scene.getMajExtK()};
         if (0.0f == maj_ext_k) { return false; }
         d_event = ray.t_min;
         p_event = 0.0f;
@@ -70,15 +69,15 @@ namespace rt {
             const float dt{-log(1.0f - UnitRNG::generate()) / maj_ext_k};
             d_event += dt;
             const vec3  s_pos{ray.getPtAtDist(d_event)};
-            const float ext_k{scene->sampleExtK(s_pos)};
+            const float ext_k{scene.sampleExtK(s_pos)};
             p_event = ext_k / maj_ext_k;
         }
         return d_event < ray.t_max;
     }
 
-    void PhotonTracer::trace(const PPL& source, const vec3& shoot_dir, int max_vpl_count,
-                             LightArray<VPL>& la) {
-        la.reset();
+    void PhotonTracer::trace(const Scene& scene, const PPL& source, const glm::vec3& shoot_dir,
+                             const int max_vpl_count, LightArray<VPL>& la) {
+        la.clear();
         uint n_paths{0};    // Total number of paths traced
         do {
             // Start a new path
@@ -94,22 +93,22 @@ namespace rt {
             vec3 attenuation{1.0f / pdf};
             for (int n_bounces = 1; n_bounces <= N_GI_BOUNCES; ++n_bounces) {
                 // Trace ray through scene and fog
-                const bool hit     = scene->trace(ray);
-                const auto fog_hit = scene->traceFog(ray);
+                const bool hit     = scene.trace(ray);
+                const auto fog_hit = scene.traceFog(ray);
                 // Volume scattering event?
                 if (fog_hit) {
                     // Step through volume
                     ray.setValidRange(max(fog_hit.entr, 0.0f),
                                       min(fog_hit.exit, ray.inters.distance));
                     float t_event, p_event;
-                    if (calcEventDistWT(ray, t_event, p_event)) {
+                    if (calcEventDistWT(scene, ray, t_event, p_event)) {
                         // Volume (scattering or absorption) event
                         const vec3  event_pt{ray.getPtAtDist(t_event)};
-                        const float sca_k{scene->sampleScaK(event_pt)};
-                        const float sca_albedo{scene->getScaAlbedo()};
+                        const float sca_k{scene.sampleScaK(event_pt)};
+                        const float sca_albedo{scene.getScaAlbedo()};
                         // Russian roulette
                         if (UnitRNG::generate() < sca_albedo) {
-                            // Scattering event; create a PL
+                            // Scattering event; create a VPL
                             const vec3 I{ray.d};
                             const vec3 vpl_intens{source.intensity() * attenuation};
                             la.addLight(VPL{n_paths - 1, event_pt, I, vpl_intens, sca_k});
@@ -181,7 +180,7 @@ namespace rt {
         } while (la.size() < max_vpl_count && n_paths < static_cast<uint>(100 * max_vpl_count));
         if (la.size() < max_vpl_count) {
             // Unable to (efficiently) create VPLs; abort
-            la.reset();
+            la.clear();
             printError("VPL tracing problems.");
         } else {
             la.normalizeIntensity(n_paths);

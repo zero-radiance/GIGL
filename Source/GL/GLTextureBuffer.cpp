@@ -1,15 +1,18 @@
 #include "GLTextureBuffer.h"
+#include <cassert>
+#include <OpenGL\gl_core_4_4.hpp>
 
-GLTextureBuffer::GLTextureBuffer(const GLenum tex_unit,const GLenum tex_intern_fmt,
-                                 const GLsizeiptr byte_sz, const void* const data) {
+GLTextureBuffer::GLTextureBuffer(const GLsizeiptr byte_sz, const GLenum tex_unit,
+                                 const GLenum tex_intern_fmt): m_byte_sz{byte_sz}{
     // Generate buffer
     gl::GenBuffers(1, &m_handle);
     gl::BindBuffer(gl::TEXTURE_BUFFER, m_handle);
-    gl::BufferData(gl::TEXTURE_BUFFER, byte_sz, data, gl::STATIC_DRAW);
+    gl::BufferData(gl::TEXTURE_BUFFER, m_byte_sz, nullptr, gl::STATIC_DRAW);
     // Create texture
     gl::ActiveTexture(gl::TEXTURE0 + tex_unit);
     gl::GenTextures(1, &m_tex_handle);
     gl::BindTexture(gl::TEXTURE_BUFFER, m_tex_handle);
+    // Link the two together
     gl::TexBuffer(gl::TEXTURE_BUFFER, tex_intern_fmt, m_handle);
 }
 
@@ -36,4 +39,10 @@ GLTextureBuffer::~GLTextureBuffer() {
         gl::DeleteTextures(1, &m_tex_handle);
         gl::DeleteBuffers(1, &m_handle);
     }
+}
+
+void GLTextureBuffer::bufferData(const GLsizeiptr byte_sz, const void* const data) {
+    assert(byte_sz <= m_byte_sz);
+    gl::BindBuffer(gl::TEXTURE_BUFFER, m_handle);
+    gl::BufferSubData(gl::TEXTURE_BUFFER, 0, byte_sz, data);
 }

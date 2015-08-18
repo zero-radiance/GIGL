@@ -36,7 +36,7 @@ GLElementBuffer& GLElementBuffer::operator=(const GLElementBuffer& ebo) {
 
 GLElementBuffer::GLElementBuffer(GLElementBuffer&& ebo): m_handle{ebo.m_handle},
                  m_min_idx{ebo.m_min_idx}, m_max_idx{ebo.m_max_idx},
-                 m_is_buffered{ebo.m_is_buffered}, m_data_vec(ebo.m_data_vec) {
+                 m_is_buffered{ebo.m_is_buffered}, m_data_vec(std::move(ebo.m_data_vec)) {
     // Mark as moved
     ebo.m_handle = 0;
 }
