@@ -185,6 +185,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="Source\Shaders\Combine.frag" />
     <None Include="Source\Shaders\GBuffer.frag" />
     <None Include="Source\Shaders\GBuffer.vert" />
     <None Include="Source\Shaders\Shade.vert" />

@@ -1,7 +1,7 @@
 #version 440
 
 #define INV_PI        0.318309873       // 1 / π
-#define CAM_RES       800               // Camera sensor resolution
+#define CAM_RES       800 / 2           // Camera sensor resolution
 #define HG_G          0.25              // Henyey-Greenstein scattering asymmetry parameter
 #define OFFSET        0.001             // Shadow mapping offset
 #define R_M_INTERVALS 8                 // Number of ray marching intervals
@@ -11,7 +11,7 @@
 #define MAX_VPLS      150               // Max. number of secondary lights
 #define MAX_FRAMES    30                // Max. number of frames before convergence is achieved
 #define MAX_SAMPLES   24                // Max. number of samples per pixel
-#define SAFE          coherent restrict // No data races
+#define SAFE          restrict coherent // Assume coherency within shader, enforce it between shaders
 
 struct Material {
     vec3  k_d;                          // Diffuse coefficient
@@ -72,12 +72,11 @@ uniform bool          clamp_rsq;        // Determines whether radius squared is 
 // Misc
 uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
 uniform int           frame_id;         // Frame index, is set to zero on reset
-uniform int           exposure;         // Exposure time for basic brightness control
+uniform int           exposure;         // Exposure time
 uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
 uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_SAMPLES
-uniform SAFE layout(rgba32f) image2D accum_buffer;      // Accumulation buffer
-uniform SAFE readonly layout(rg32f) image2D fog_dist;   // Primary ray entry/exit distances
+uniform SAFE readonly layout(rg32f) image2D fog_dist; // Primary ray entry/exit distances
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -87,7 +86,14 @@ layout (location = 0) out vec4 frag_col;
 
 // Returns fragment's position in world space
 vec3 getWorldPos() {
-    return texelFetch(w_positions, ivec2(gl_FragCoord.xy), 0).rgb;
+    return texelFetch(w_positions, 2 * ivec2(gl_FragCoord.xy), 0).rgb;
+}
+
+// Loads parametric ray distances from a texture
+void restoreRayDist(out float t_min, out float t_max) {
+    const vec2 v = imageLoad(fog_dist, 2 * ivec2(gl_FragCoord.xy)).rg;
+    t_min = v.r;
+    t_max = v.g;
 }
 
 // Performs ray-BBox intersection
@@ -204,7 +210,7 @@ vec3 computeLe(in const VirtualPointLight vpl, in const vec3 O) {
 
 // Compute the contribution of primary point lights
 vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O) {
-    const vec3 d = w_pos - ppls[light_id].w_pos;
+    const vec3  d = w_pos - ppls[light_id].w_pos;
     const float dist_sq = dot(d, d);
     // Check OSM visibility
     const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
@@ -214,7 +220,7 @@ vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
         // Light is visible from the fragment
         const vec3  I       = normalize(-d);
         const float transm  = calcTransm(w_pos, I, dist_sq);
-        const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
+        const float falloff = 1.0 / dist_sq;
         const vec3  Li      = transm * ppls[light_id].intens * falloff;
         // Evaluate the rendering equation
         const float cos_the = -dot(I, O);
@@ -226,7 +232,7 @@ vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
 
 // Compute the contribution of VPLs
 vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O) {
-    const vec3 d = w_pos - vpls[light_id].w_pos;
+    const vec3  d = w_pos - vpls[light_id].w_pos;
     const float dist_sq = dot(d, d);
     // Check OSM visibility
     const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
@@ -244,23 +250,6 @@ vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
     } else {
         return vec3(0.0);
     }
-}
-
-// Loads parametric ray distances from a texture
-void restoreRayDist(out float t_min, out float t_max) {
-    const vec2 v = imageLoad(fog_dist, ivec2(gl_FragCoord.xy)).rg;
-    t_min = v.r;
-    t_max = v.g;
-}
-
-// Returns the color value from the accumulation buffer
-vec4 readFromAccumBuffer() {
-    return imageLoad(accum_buffer, ivec2(gl_FragCoord.xy));
-}
-
-// Writes the color value to the accumulation buffer
-void writeToAccumBuffer(in const vec4 color) {
-    imageStore(accum_buffer, ivec2(gl_FragCoord.xy), color);
 }
 
 void main() {
@@ -289,13 +278,13 @@ void main() {
                     if (clamp_rsq) {
                         // Gather contribution of primary lights
                         for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                            frag_col.rgb += transm * calcPplContrib(i, s_pos, ray_d);
+                            frag_col.rgb += transm * calcPplContrib(i, s_pos, -ray_d);
                         }
                     }
                     if (gi_enabled) {
                         // Gather contribution of VPLs
                         for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                            frag_col.rgb += transm * calcVplContrib(i, s_pos, ray_d);
+                            frag_col.rgb += transm * calcVplContrib(i, s_pos, -ray_d);
                         }
                     }
                 }
@@ -304,22 +293,14 @@ void main() {
             const float inv_p = t_max - t_min;
             frag_col.rgb *= inv_p / n_samples;
         }
-        // Read the value from the previous shader stage
-        const vec4 prev_color = readFromAccumBuffer();
-        // Blend the colors
+        // Decide on the mode of accumulation buffer increment
         if (frame_id > 0) {
-            // Multi-frame accumulation
-            frag_col.rgb = prev_color.rgb + frag_col.rgb / (frame_id + 1);
+            // Multi-frame accumulation: normalize
+            frag_col.rgb /= (frame_id + 1);
         } else {
-            // Single-frame accumulation
-            frag_col.rgb += prev_color.rgb;
+            // Single-frame accumulation: the increment value is the color itself
         }
-        // Update the accumulation buffer
-        writeToAccumBuffer(frag_col);
     } else {
-        // Read the value from the previous frame
-        frag_col = readFromAccumBuffer();
+        // Do nothing; accumulation buffer values are final
     }
-    // Perform tone mapping
-    frag_col.rgb = vec3(1.0) - exp(-exposure * frag_col.rgb);
 }

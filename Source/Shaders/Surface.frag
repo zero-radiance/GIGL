@@ -11,7 +11,7 @@
 #define MAX_VPLS      150               // Max. number of secondary lights
 #define MAX_FRAMES    30                // Max. number of frames before convergence is achieved
 #define MAX_SAMPLES   24                // Max. number of samples per pixel
-#define SAFE          coherent restrict // No data races
+#define SAFE          restrict coherent // Assume coherency within shader, enforce it between shaders
 
 struct Material {
     vec3  k_d;                          // Diffuse coefficient
@@ -78,7 +78,7 @@ uniform bool          clamp_rsq;        // Determines whether radius squared is 
 // Misc
 uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
 uniform int           frame_id;         // Frame index, is set to zero on reset
-uniform int           exposure;         // Exposure time for basic brightness control
+uniform int           exposure;         // Exposure time
 uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
 uniform SAFE layout(rgba32f) image2D accum_buffer;      // Accumulation buffer
@@ -120,6 +120,21 @@ vec3 getWorldNorm() {
 Material getMaterial() {
     const uint mat_id = texelFetch(material_ids, ivec2(gl_FragCoord.xy), 0).r;
     return materials[mat_id];
+}
+
+// Saves parametric ray distances to a texture
+void recordRayDist(in const float t_min, in const float t_max) {
+    imageStore(fog_dist, ivec2(gl_FragCoord.xy), vec4(t_min, t_max, 0.0, 0.0));
+}
+
+// Returns the color value from the accumulation buffer
+vec4 readFromAccumBuffer() {
+    return imageLoad(accum_buffer, ivec2(gl_FragCoord.xy));
+}
+
+// Writes the color value to the accumulation buffer
+void writeToAccumBuffer(in const vec4 color) {
+    imageStore(accum_buffer, ivec2(gl_FragCoord.xy), color);
 }
 
 // Performs ray-BBox intersection
@@ -231,7 +246,7 @@ vec3 computeLe(in const VirtualPointLight vpl, in const vec3 O) {
 // Compute the contribution of primary point lights
 vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N, in const vec3 O,
                     in const Material material) {
-    const vec3 d = w_pos - ppls[light_id].w_pos;
+    const vec3  d = w_pos - ppls[light_id].w_pos;
     const float dist_sq = dot(d, d);
     // Check OSM visibility
     const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
@@ -241,7 +256,7 @@ vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N,
         // Light is visible from the fragment
         const vec3  I       = normalize(-d);
         const float transm  = calcTransm(w_pos, I, dist_sq);
-        const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
+        const float falloff = 1.0 / dist_sq;
         const vec3  Li      = transm * ppls[light_id].intens * falloff;
         // Evaluate the rendering equation
         const float cos_the_inc = max(0.0, dot(I, N));
@@ -254,7 +269,7 @@ vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N,
 // Compute the contribution of VPLs
 vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N, in const vec3 O,
                     in const Material material) {
-    const vec3 d = w_pos - vpls[light_id].w_pos;
+    const vec3  d = w_pos - vpls[light_id].w_pos;
     const float dist_sq = dot(d, d);
     // Check OSM visibility
     const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
@@ -272,21 +287,6 @@ vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N,
     } else {
         return vec3(0.0);
     }
-}
-
-// Saves parametric ray distances to a texture
-void recordRayDist(in const float t_min, in const float t_max) {
-    imageStore(fog_dist, ivec2(gl_FragCoord.xy), vec4(t_min, t_max, 0.0, 0.0));
-}
-
-// Returns the color value from the accumulation buffer
-vec4 readFromAccumBuffer() {
-    return imageLoad(accum_buffer, ivec2(gl_FragCoord.xy));
-}
-
-// Writes the color value to the accumulation buffer
-void writeToAccumBuffer(in const vec4 color) {
-    imageStore(accum_buffer, ivec2(gl_FragCoord.xy), color);
 }
 
 void main() {

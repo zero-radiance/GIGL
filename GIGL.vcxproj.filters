@@ -273,5 +273,8 @@
     <None Include="Source\Shaders\Volume.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Source\Shaders\Combine.frag">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

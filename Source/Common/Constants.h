@@ -50,6 +50,7 @@
 #define TEX_U_W_NORM   7            // Normal vector texture
 #define TEX_U_MAT_ID   8            // Material id texture
 #define TEX_U_FOG_DIST 9            // Primary ray entry/exit distances for fog
+#define TEX_U_VOL_COMP 10           // Subsampled volume contribution (radiance) 
 
 /* Image unit allocation */
 #define IMG_U_ACCUM    0            // Accumulation buffer texture for progressive rendering
