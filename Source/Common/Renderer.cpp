@@ -214,9 +214,14 @@ void DeferredRenderer::generateShadowMaps(const Scene& scene, const mat4& model_
     // Set culling and depth testing
     gl::CullFace(gl::FRONT);
     gl::Enable(gl::DEPTH_TEST);
+    // Add an offset to the depth value of each polygon
+    gl::Enable(gl::POLYGON_OFFSET_FILL);
+    gl::PolygonOffset(1.1f, 4.0f);
     // Render
     m_ppl_OSM.generate(scene, ppls, model_mat);
     if (settings.gi_enabled) m_vpl_OSM.generate(scene, vpls, model_mat);
+    // Disable depth offsetting
+    gl::Disable(gl::POLYGON_OFFSET_FILL);
 }
 
 void DeferredRenderer::generateGBuffer(const Scene& scene) const {

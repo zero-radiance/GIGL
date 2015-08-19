@@ -3,7 +3,6 @@
 #define INV_PI        0.318309873       // 1 / π
 #define CAM_RES       800 / 2           // Camera sensor resolution
 #define HG_G          0.25              // Henyey-Greenstein scattering asymmetry parameter
-#define OFFSET        0.001             // Shadow mapping offset
 #define R_M_INTERVALS 8                 // Number of ray marching intervals
 #define CLAMP_DIST_SQ 75.0 * 75.0       // Radius squared used for clamping
 #define MAX_MATERIALS 8                 // Max. number of materials
@@ -213,7 +212,7 @@ vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
     const vec3  d = w_pos - ppls[light_id].w_pos;
     const float dist_sq = dot(d, d);
     // Check OSM visibility
-    const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
+    const float norm_dist_sq = dist_sq * inv_max_dist_sq;
     // dist < texture(x, y, z, i) ? 1.0 : 0.0
     const float visibility = texture(ppl_shadow_cube, vec4(d, light_id), norm_dist_sq);
     if (visibility > 0.0) {
@@ -235,7 +234,7 @@ vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
     const vec3  d = w_pos - vpls[light_id].w_pos;
     const float dist_sq = dot(d, d);
     // Check OSM visibility
-    const float norm_dist_sq = dist_sq * inv_max_dist_sq + OFFSET;
+    const float norm_dist_sq = dist_sq * inv_max_dist_sq;
     // dist < texture(x, y, z, i) ? 1.0 : 0.0
     const float visibility = texture(vpl_shadow_cube, vec4(d, light_id), norm_dist_sq);
     if (visibility > 0.0) {
