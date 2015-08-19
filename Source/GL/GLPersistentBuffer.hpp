@@ -40,8 +40,8 @@ GLPersistentBuffer<T>& GLPersistentBuffer<T>::operator=(const GLPersistentBuffer
     // Allocate buffer on GPU
     gl::BindBuffer(T, m_handle);
     static const GLbitfield map_flags{gl::MAP_PERSISTENT_BIT |  // Persistent flag
-                                      gl::MAP_COHERENT_BIT |  // Make changes auto. visible to GPU
-                                      gl::MAP_WRITE_BIT};      // Map it for writing
+                                      gl::MAP_COHERENT_BIT   |  // Make changes auto. visible to GPU
+                                      gl::MAP_WRITE_BIT};       // Map it for writing
     gl::BufferStorage(T, m_byte_sz, nullptr, map_flags);
     // Map the data
     m_buffer = gl::MapBufferRange(T, 0, m_byte_sz, map_flags);
