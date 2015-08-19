@@ -127,7 +127,7 @@ void InputHandler::reset() {
     // Reset m_params
     m_params->gi_enabled   = false;
     m_params->clamp_r_sq   = true;
-    m_params->exposure     = 16;
+    m_params->exposure     = EXPOSURE;
     m_params->frame_num    = 0;
     m_params->max_num_vpls = MAX_N_VPLS;
     m_params->abs_k        = ABS_K;

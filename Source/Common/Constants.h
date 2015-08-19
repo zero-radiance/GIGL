@@ -22,6 +22,7 @@
 #define RAY_OFFSET     1E-4f        // Offset in normal direction to avoid self-intersections
 #define TRI_EPS        1E-4f        // Small epsilon value used by triangle intersector
 #define SURVIVAL_P_RR  0.95f        // Survival probability for Russian Roulette
+#define EXPOSURE       12           // Default exposure time
 #define THRESHOLD_MS   500          // Used to ignore repeated key activations
 #define TITLE_LEN      70           // Number of characters in window title
 #define PRIM_PL_POS    {278.2f, \
