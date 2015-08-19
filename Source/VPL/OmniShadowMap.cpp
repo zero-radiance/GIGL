@@ -111,7 +111,7 @@ void OmniShadowMap::createDepthTexture() {
     // Return result of comparison of tex(x, y, z, i) with current distance
     gl::TexParameteri(gl::TEXTURE_CUBE_MAP_ARRAY, gl::TEXTURE_COMPARE_MODE,
                       gl::COMPARE_REF_TO_TEXTURE);
-    // currDist < tex(x, y, z, i) ? 1.0 : 0.0
+    // curr_dist < tex(x, y, z, i) ? 1.0 : 0.0
     gl::TexParameteri(gl::TEXTURE_CUBE_MAP_ARRAY, gl::TEXTURE_COMPARE_FUNC, gl::LESS);
 }
 
