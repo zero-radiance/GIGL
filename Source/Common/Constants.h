@@ -12,7 +12,7 @@
 #define WINDOW_RES     800
 #define MAX_N_VBOS     8            // Maximal number of vertex buffers
 #define MAX_DIST       1000.0f      // Camera distance to far plane
-#define PRI_SM_RES     512          // Primary shadow map resolution in one dimension
+#define PRI_SM_RES     1024         // Primary shadow map resolution in one dimension
 #define SEC_SM_RES     64           // Secondary shadow map resolution in one dimension
 #define N_GI_BOUNCES   3            // Number of light bounces for GI
 #define MAX_MATERIALS  8            // Max. number of materials
