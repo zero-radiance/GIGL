@@ -92,9 +92,9 @@ void DeferredRenderer::generateDeferredFBO() {
     gl::GenRenderbuffers(1, &m_depth_rbo_handle);
     gl::BindRenderbuffer(gl::RENDERBUFFER, m_depth_rbo_handle);
     gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, m_res_x, m_res_y);
-    // Attach textures to the framebuffer
     gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
                                 gl::RENDERBUFFER, m_depth_rbo_handle);
+    // Attach textures to the framebuffer
     gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D,
                              m_tex_w_pos.id(), 0);
     gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT1, gl::TEXTURE_2D,
