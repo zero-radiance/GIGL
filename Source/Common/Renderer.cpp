@@ -211,16 +211,15 @@ void DeferredRenderer::generateShadowMaps(const Scene& scene, const mat4& model_
                                           const LightArray<PPL>& ppls,
                                           const LightArray<VPL>& vpls) const {
     m_sp_osm.use();
-    // Set culling and depth testing
+    // Set the culling mode
     gl::CullFace(gl::FRONT);
-    gl::Enable(gl::DEPTH_TEST);
     // Add an offset to the depth value of each polygon
     gl::Enable(gl::POLYGON_OFFSET_FILL);
     gl::PolygonOffset(1.1f, 4.0f);
     // Render
     m_ppl_OSM.generate(scene, ppls, model_mat);
     if (settings.gi_enabled) m_vpl_OSM.generate(scene, vpls, model_mat);
-    // Disable depth offsetting
+    // Disable depth offsetting again
     gl::Disable(gl::POLYGON_OFFSET_FILL);
 }
 
@@ -228,9 +227,8 @@ void DeferredRenderer::generateGBuffer(const Scene& scene) const {
     // Bind and clear the deferred framebuffer
     gl::BindFramebuffer(gl::FRAMEBUFFER, m_defer_fbo_handle);
     gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-    // Set culling, depth test and viewport
+    // Set the culling mode and the viewport
     gl::CullFace(gl::BACK);
-    gl::Enable(gl::DEPTH_TEST);
     gl::Viewport(0, 0, m_res_x, m_res_y);
     // Install the shader program
     m_sp_gbuf.use();
@@ -239,6 +237,7 @@ void DeferredRenderer::generateGBuffer(const Scene& scene) const {
 }
 
 void DeferredRenderer::shade(const int tri_buf_idx) const {
+    // Disable depth testing
     gl::Disable(gl::DEPTH_TEST);
     /* Perform surface shading */
     m_sp_shade_surface.use();
@@ -281,4 +280,6 @@ void DeferredRenderer::shade(const int tri_buf_idx) const {
     // Create full resolution screen output
     gl::Viewport(0, 0, m_res_x, m_res_y);
     m_ss_quad_va.draw(gl::TRIANGLE_STRIP);
+    // Enable depth testing again
+    gl::Enable(gl::DEPTH_TEST);
 }

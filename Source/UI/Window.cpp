@@ -144,6 +144,7 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
         glfwTerminate();
         TERMINATE();
     }
+    gl::Enable(gl::DEPTH_TEST);         // Enable depth testing
     gl::Enable(gl::FRAMEBUFFER_SRGB);   // Enable sRGB framebuffer support
     gl::Enable(gl::CULL_FACE);		    // Cull incorrectly-facing triangles (front or back)
     gl::Disable(gl::DITHER);            // Disable dithering
