@@ -9,7 +9,6 @@
 #define MAX_PPLS      1                 // Max. number of primary lights
 #define MAX_VPLS      150               // Max. number of secondary lights
 #define MAX_FRAMES    30                // Max. number of frames before convergence is achieved
-#define MAX_SAMPLES   24                // Max. number of samples per pixel
 #define SAFE          restrict coherent // Assume coherency within shader, enforce it between shaders
 
 struct Material {
@@ -72,16 +71,16 @@ uniform vec3          fog_bounds[2];    // Minimal and maximal bounding points o
 uniform vec3          inv_fog_dims;     // Inverse of fog dimensions
 uniform float         ext_k;            // Extinction coefficient per unit density
 uniform float         sca_albedo;       // Probability of photon being scattered
-uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
+uniform SAFE writeonly layout(rg32f) image2D fog_dist;  // Primary ray entry/exit distances
 
 // Misc
 uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
+uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
 uniform int           frame_id;         // Frame index, is set to zero on reset
 uniform int           exposure;         // Exposure time
 uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
 uniform SAFE layout(rgba32f) image2D accum_buffer;      // Accumulation buffer
-uniform SAFE writeonly layout(rg32f) image2D fog_dist;  // Primary ray entry/exit distances
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 

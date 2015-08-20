@@ -9,7 +9,7 @@
 #define MAX_PPLS      1                 // Max. number of primary lights
 #define MAX_VPLS      150               // Max. number of secondary lights
 #define MAX_FRAMES    30                // Max. number of frames before convergence is achieved
-#define MAX_SAMPLES   24                // Max. number of samples per pixel
+#define MAX_VOL_SAMP   32               // Max. number of volume samples per pixel
 #define SAFE          restrict coherent // Assume coherency within shader, enforce it between shaders
 
 struct Material {
@@ -66,16 +66,16 @@ uniform vec3          inv_fog_dims;     // Inverse of fog dimensions
 uniform float         sca_k;            // Scattering coefficient per unit density
 uniform float         ext_k;            // Extinction coefficient per unit density
 uniform float         sca_albedo;       // Probability of photon being scattered
-uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
+uniform SAFE readonly layout(rg32f) image2D fog_dist; // Primary ray entry/exit distances
 
 // Misc
 uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
+uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
 uniform int           frame_id;         // Frame index, is set to zero on reset
 uniform int           exposure;         // Exposure time
 uniform vec3          cam_w_pos;        // Camera position in world space
 uniform int           tri_buf_idx;      // Active buffer index within ring-triple-buffer
-uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_SAMPLES
-uniform SAFE readonly layout(rg32f) image2D fog_dist; // Primary ray entry/exit distances
+uniform samplerBuffer halton_seq;       // Halton sequence of size MAX_FRAMES * MAX_VOL_SAMP
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -263,7 +263,7 @@ void main() {
         restoreRayDist(t_min, t_max);
         if (t_max > 0.0) {
             // There is fog along the ray
-            const int n_samples = gi_enabled ? MAX_SAMPLES / 4 : MAX_SAMPLES;
+            const int n_samples = gi_enabled ? MAX_VOL_SAMP / 4 : MAX_VOL_SAMP;
             for (int s = 0; s < n_samples; ++s) {
                 // Compute the sample position
                 const vec2 xy = gl_FragCoord.xy / CAM_RES;

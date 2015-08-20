@@ -131,7 +131,7 @@ int main(int, char**) {
         // Display frame time
         const uint t4{HighResTimer::time_ms()};
         char title[TITLE_LEN];
-        if (engine.settings.frame_num <= 30) {
+        if (engine.settings.frame_num <= MAX_FRAMES) {
             sprintf_s(title, TITLE_LEN, "GLGI (Shade: %u ms | GBuf: %u ms | SM: %u ms | PT: %u ms)",
                       t4 - t3, t3 - t2, t2 - t1, t1 - t0);
         } else {

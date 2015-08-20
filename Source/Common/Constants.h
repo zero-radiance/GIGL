@@ -9,7 +9,9 @@
 #define INV_PI         0.318309873f // Single-precision value of 1 / Pi
 
 /* Rendering settings */
-#define WINDOW_RES     1024
+#define WINDOW_RES     1024         // Camera resolution
+#define MAX_FRAMES     30           // Max. number of frames before convergence is achieved
+#define MAX_VOL_SAMP   32           // Max. number of volume samples per pixel
 #define MAX_N_VBOS     8            // Maximal number of vertex buffers
 #define MAX_DIST       1000.0f      // Camera distance to far plane
 #define PRI_SM_RES     1024         // Primary shadow map resolution in one dimension

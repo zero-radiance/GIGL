@@ -18,7 +18,7 @@ CONSTEXPR GLsizei ss_quad_va_comp_cnts[] = {3};  // vec3
 
 DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
                   m_res_x{res_x}, m_res_y{res_y},
-                  m_hal_tbo{30 * 24 * sizeof(GLfloat), TEX_U_HALTON, gl::R32F},
+                  m_hal_tbo{MAX_FRAMES * MAX_VOL_SAMP * sizeof(GLfloat), TEX_U_HALTON, gl::R32F},
                   m_ppl_OSM{PRI_SM_RES, 1,          MAX_DIST, TEX_U_PPL_SM},
                   m_vpl_OSM{SEC_SM_RES, MAX_N_VPLS, MAX_DIST, TEX_U_VPL_SM},
                   m_ss_quad_va{ss_quad_va_components, ss_quad_va_comp_cnts},
@@ -29,7 +29,7 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
                   m_tex_fog_dist{TEX_U_FOG_DIST, res_x, res_y, false, false},
                   m_tex_vol_comp{TEX_U_VOL_COMP, res_x / 2, res_y / 2, false, true} {
     // Generate a Halton sequence for 30 frames with (up to) 24 samples per frame
-    static const GLuint seq_sz{30 * 24};
+    CONSTEXPR GLuint seq_sz{MAX_FRAMES * MAX_VOL_SAMP};
     GLfloat hal_seq[seq_sz];
     HaltonSG::generate<2>(hal_seq);
     m_hal_tbo.bufferData(sizeof(hal_seq), hal_seq);
