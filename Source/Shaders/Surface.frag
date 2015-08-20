@@ -85,7 +85,7 @@ uniform SAFE writeonly layout(rg32f) image2D fog_dist;  // Primary ray entry/exi
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-layout (location = 0) out vec4 frag_col;
+layout (location = 0) out vec3 frag_col;
 
 // Implementation >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -127,13 +127,13 @@ void recordRayDist(in const float t_min, in const float t_max) {
 }
 
 // Returns the color value from the accumulation buffer
-vec4 readFromAccumBuffer() {
-    return imageLoad(accum_buffer, ivec2(gl_FragCoord.xy));
+vec3 readFromAccumBuffer() {
+    return imageLoad(accum_buffer, ivec2(gl_FragCoord.xy)).rgb;
 }
 
 // Writes the color value to the accumulation buffer
-void writeToAccumBuffer(in const vec4 color) {
-    imageStore(accum_buffer, ivec2(gl_FragCoord.xy), color);
+void writeToAccumBuffer(in const vec3 color) {
+    imageStore(accum_buffer, ivec2(gl_FragCoord.xy), vec4(color, 1.0));
 }
 
 // Performs ray-BBox intersection
@@ -289,7 +289,7 @@ vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 N,
 }
 
 void main() {
-    frag_col = vec4(0.0, 0.0, 0.0, 1.0);
+    frag_col = vec3(0.0);
     if (frame_id < MAX_FRAMES) {
         // Perform shading
         float transm_frag = 1.0;
@@ -320,21 +320,21 @@ void main() {
             if (clamp_rsq) {
                 // Gather contribution of primary lights
                 for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                    frag_col.rgb += transm_frag * calcPplContrib(i, w_pos, w_norm, -ray_d, material);
+                    frag_col += transm_frag * calcPplContrib(i, w_pos, w_norm, -ray_d, material);
                 }
             }
             if (gi_enabled) {
                 // Gather contribution of VPLs
                 for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                    frag_col.rgb += transm_frag * calcVplContrib(i, w_pos, w_norm, -ray_d, material);
+                    frag_col += transm_frag * calcVplContrib(i, w_pos, w_norm, -ray_d, material);
                 }
             }
         }
         if (frame_id > 0) {
             // Read the value from the previous frame
-            const vec4 prev_color = readFromAccumBuffer();
+            const vec3 prev_color = readFromAccumBuffer();
             // Blend the colors
-            frag_col.rgb = (frame_id * prev_color.rgb + frag_col.rgb) / (frame_id + 1);
+            frag_col = (frame_id * prev_color + frag_col) / (frame_id + 1);
         }
         // Update the accumulation buffer
         writeToAccumBuffer(frag_col);
@@ -343,5 +343,5 @@ void main() {
         frag_col = readFromAccumBuffer();
     }
     // Perform tone mapping
-    frag_col.rgb = vec3(1.0) - exp(-exposure * frag_col.rgb);
+    frag_col = vec3(1.0) - exp(-exposure * frag_col);
 }

@@ -79,7 +79,7 @@ uniform SAFE readonly layout(rg32f) image2D fog_dist; // Primary ray entry/exit 
 
 // Vars OUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-layout (location = 0) out vec4 frag_col;
+layout (location = 0) out vec3 frag_col;
 
 // Implementation >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -252,7 +252,7 @@ vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
 }
 
 void main() {
-    frag_col = vec4(0.0, 0.0, 0.0, 1.0);
+    frag_col = vec3(0.0);
     if (frame_id < MAX_FRAMES) {
         // Perform shading
         const vec3 w_pos = getWorldPos();
@@ -277,25 +277,25 @@ void main() {
                     if (clamp_rsq) {
                         // Gather contribution of primary lights
                         for (int i = tri_buf_idx * MAX_PPLS, e = i + MAX_PPLS; i < e; ++i) {
-                            frag_col.rgb += transm * calcPplContrib(i, s_pos, -ray_d);
+                            frag_col += transm * calcPplContrib(i, s_pos, -ray_d);
                         }
                     }
                     if (gi_enabled) {
                         // Gather contribution of VPLs
                         for (int i = tri_buf_idx * MAX_VPLS, e = i + n_vpls; i < e; ++i) {
-                            frag_col.rgb += transm * calcVplContrib(i, s_pos, -ray_d);
+                            frag_col += transm * calcVplContrib(i, s_pos, -ray_d);
                         }
                     }
                 }
             }
             // Normalize
             const float inv_p = t_max - t_min;
-            frag_col.rgb *= inv_p / n_samples;
+            frag_col *= inv_p / n_samples;
         }
         // Decide on the mode of accumulation buffer increment
         if (frame_id > 0) {
             // Multi-frame accumulation: normalize
-            frag_col.rgb /= (frame_id + 1);
+            frag_col /= (frame_id + 1);
         } else {
             // Single-frame accumulation: the increment value is the color itself
         }
