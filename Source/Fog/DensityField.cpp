@@ -260,6 +260,7 @@ void DensityField::createTex() {
     gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_BORDER);
     gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_BORDER);
     gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_BORDER);
+    // Upload the density data
     gl::TexSubImage3D(gl::TEXTURE_3D, 0, 0, 0, 0, m_res.x, m_res.y, m_res.z,
                       gl::RED, gl::UNSIGNED_BYTE, m_data);
 }
@@ -373,6 +374,7 @@ void DensityField::createPiDensTex() {
     gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE);
     gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE);
     gl::TexParameteri(gl::TEXTURE_3D, gl::TEXTURE_WRAP_R, gl::CLAMP_TO_EDGE);
+    // Upload the preintegrated density data
     gl::TexSubImage3D(gl::TEXTURE_3D, 0, 0, 0, 0, m_pi_dens_res.x, m_pi_dens_res.y,
                       m_pi_dens_res.z, gl::RED, gl::FLOAT, m_pi_dens_data);
 }
