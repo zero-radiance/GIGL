@@ -1,6 +1,6 @@
 #version 440
 
-#define CAM_RES    800                  // Camera sensor resolution
+#define CAM_RES    1024                  // Camera sensor resolution
 #define MAX_FRAMES 30                   // Max. number of frames before convergence is achieved
 #define SAFE       restrict coherent    // Assume coherency within shader, enforce it between shaders
 

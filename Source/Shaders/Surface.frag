@@ -1,7 +1,7 @@
 #version 440
 
 #define INV_PI        0.318309873       // 1 / π
-#define CAM_RES       800               // Camera sensor resolution
+#define CAM_RES       1024               // Camera sensor resolution
 #define HG_G          0.25              // Henyey-Greenstein scattering asymmetry parameter
 #define R_M_INTERVALS 8                 // Number of ray marching intervals
 #define CLAMP_DIST_SQ 75.0 * 75.0       // Radius squared used for clamping

@@ -36,7 +36,7 @@ int main(int, char**) {
     const PerspectiveCamera cam{{278.0f, 273.0f, -800.0f},  // Position
                                 {0.0f, 0.0f, 1.0f},			// Direction
                                 {0.0f, 1.0f, 0.0f},			// Up
-                                0.22f * PI,					// Horizontal FoV
+                                0.215f * PI,				// Horizontal FoV
                                 WINDOW_RES, WINDOW_RES,     // Resolution
                                 0.1f, 2500.0f};				// Dist. to near and far clipping planes
     // Define transformation matrices

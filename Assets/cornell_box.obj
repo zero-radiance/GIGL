@@ -22,12 +22,13 @@ v 306.0 548.8 559.2
 v 306.0 548.8 0.0
 f -4 -3 -2 -1
 
+# Double-roof the ceiling to avoid light leaks
 o ceiling_left_dbl
 usemtl white
-v 559.0 551.0 3.0
-v 559.0 551.0 562.0
-v 306.2 551.0 562.0
-v 306.2 551.0 3.0
+v 556.0 550.0 -1.0
+v 556.0 550.0 559.2
+v 306.0 550.0 559.2
+v 306.0 550.0 -1.0
 f -4 -3 -2 -1
 
 o ceiling_right
@@ -38,12 +39,13 @@ v 0.0 548.8 559.2
 v 0.0 548.8 0.0
 f -4 -3 -2 -1
 
+# Double-roof the ceiling to avoid light leaks
 o ceiling_right_dbl
 usemtl white
-v 250.0 551.0 3.0
-v 250.0 551.0 562.0
-v -3.0 551.0 562.0
-v -3.0 551.0 3.0
+v 250.0 550.0 -1.0
+v 250.0 550.0 559.2
+v 0.0 550.0 559.2
+v 0.0 550.0 -1.0
 f -4 -3 -2 -1
 
 o back_wall
