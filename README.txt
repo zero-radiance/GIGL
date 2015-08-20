@@ -1,4 +1,6 @@
-GIGL - Global Illumination OpenGL Renderer
+GIGL - Tiny Global Illumination OpenGL Renderer
+
+DISCLAIMER: this is a work in progress! :-)
 
 Loosely based on the following papers:
 1. Keller, "Instant radiosity";
@@ -10,19 +12,19 @@ Requirements:
 2. graphics drivers with OpenGL 4.4 support.
 
 Notice:
-During the first start up, the renderer will procedurally generate volume density textures. This make take a few seconds.
-The subsequent program launches will be considerably faster, as the textures will be read from disk.
+During the first start up, the renderer will procedurally generate volume density textures (64^3 in the world space, and 64x800^2 precomputed in the camera space). This make take a few seconds.
+The subsequent program launches will be considerably faster, as the textures will be read from the disk.
 
 Controls:
-* SPACE      reset all settings;
-* G          toggle global illumination;
-* C          toggle clamping and primary light source;
-* F          toggle fog;
-* R          reset accumulation buffer;
-* 1          set VPL count to 10;
-* 2          set VPL count to 50;
-* 3          set VPL count to 150;
-* Arrow keys move primary light source;
-* Numpad +,- control volume density;
-* Numpad *,/ control exposure;
-* ESC        quit application.
+* Arrow keys    move the primary light source;
+* Numpad + -    control the volume density;
+* Numpad * /    control the exposure time;
+* F             toggle the fog;
+* G             toggle global illumination;
+* SPACE         reset all settings;
+* R             reset the accumulation buffer (hold to temporarily disable it);
+* C             toggle clamping and the primary light source;
+* 1             set the VPL count to 10;
+* 2             set the VPL count to 50;
+* 3             set the VPL count to 150;
+* ESC           exit the application.
