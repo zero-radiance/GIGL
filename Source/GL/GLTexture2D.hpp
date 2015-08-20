@@ -22,7 +22,7 @@ GLTexture2D<SIF>::GLTexture2D(const GLenum tex_unit, const GLsizei width, const 
     gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, mag_filter);
     const GLint min_filter{[=](){
         if (use_mipmaps) {
-            return use_lin_filter ? gl::NEAREST_MIPMAP_NEAREST : gl::NEAREST_MIPMAP_LINEAR;
+            return use_lin_filter ? gl::LINEAR_MIPMAP_LINEAR : gl::NEAREST_MIPMAP_NEAREST;
         } else {
             return use_lin_filter ? gl::LINEAR : gl::NEAREST;
         }
