@@ -332,8 +332,8 @@ void main() {
         if (frame_id > 0) {
             // Read the value from the previous frame
             const vec3 prev_color = readFromAccumBuffer();
-            // Blend the colors
-            frag_col = (frame_id * prev_color + frag_col) / (frame_id + 1);
+            // Accumulate radiance
+            frag_col += prev_color;
         }
         // Update the accumulation buffer
         writeToAccumBuffer(frag_col);

@@ -288,16 +288,9 @@ void main() {
                     }
                 }
             }
-            // Normalize
+            // Normalize with respect to the sampling probability
             const float inv_p = t_max - t_min;
             frag_col *= inv_p / n_samples;
-        }
-        // Decide on the mode of accumulation buffer increment
-        if (frame_id > 0) {
-            // Multi-frame accumulation: normalize
-            frag_col /= (frame_id + 1);
-        } else {
-            // Single-frame accumulation: the increment value is the color itself
         }
     } else {
         // Do nothing; accumulation buffer values are final

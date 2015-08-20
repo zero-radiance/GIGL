@@ -39,6 +39,8 @@ void main() {
     } else {
         // Do nothing; accumulation buffer values are final
     }
+    // Multi-frame accumulation: normalize
+    frag_col /= (1 + min(frame_id, 30));
     // Perform tone mapping
     frag_col = vec3(1.0) - exp(-exposure * frag_col);
 }
