@@ -36,7 +36,7 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
     // Load the required shaders
     loadShaders();
     // Manage the following uniforms automatically
-    m_uni_mngr_surf.setManagedUniforms(m_sp_shade_surface, {"gi_enabled", "clamp_rsq", "exposure",
+    m_uni_mngr_surf.setManagedUniforms(m_sp_shade_surface, {"gi_enabled", "clamp_rsq",
                                                             "frame_id", "n_vpls", "ext_k",
                                                             "sca_albedo", "tri_buf_idx"});
     m_uni_mngr_vol.setManagedUniforms(m_sp_shade_volume, {"gi_enabled", "clamp_rsq",
@@ -243,7 +243,7 @@ void DeferredRenderer::shade(const int tri_buf_idx) const {
     /* Perform surface shading */
     m_sp_shade_surface.use();
     // Set dynamic uniforms
-    m_uni_mngr_surf.setUniformValues(settings.gi_enabled, settings.clamp_r_sq, settings.exposure,
+    m_uni_mngr_surf.setUniformValues(settings.gi_enabled, settings.clamp_r_sq,
                                      settings.frame_num, settings.max_num_vpls,
                                      settings.abs_k + settings.sca_k,
                                      settings.sca_k / (settings.abs_k + settings.sca_k),

@@ -71,7 +71,7 @@ private:
     GLSLProgram         m_sp_shade_volume;  // GLSL program which performs volume shading
     GLSLProgram         m_sp_combine;       // GLSL program which combines surf. & vol. shading
     GLTextureBuffer     m_hal_tbo;          // Halton sequence texture buffer object
-    GLUniformManager<8> m_uni_mngr_surf;    // OpenGL uniform manager for m_sp_shade_surface
+    GLUniformManager<7> m_uni_mngr_surf;    // OpenGL uniform manager for m_sp_shade_surface
     GLUniformManager<8> m_uni_mngr_vol;     // OpenGL uniform manager for m_sp_shade_volume
     GLUniformManager<3> m_uni_mngr_combine; // OpenGL uniform manager for m_sp_combine
     OmniShadowMap       m_ppl_OSM;          // Omnidirectional shadow map for primary lights
