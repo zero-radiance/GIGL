@@ -42,7 +42,7 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
     m_uni_mngr_vol.setManagedUniforms(m_sp_shade_volume, {"gi_enabled", "clamp_rsq",
                                                           "frame_id", "n_vpls", "sca_k", "ext_k",
                                                           "sca_albedo", "tri_buf_idx"});
-    m_uni_mngr_combine.setManagedUniforms(m_sp_combine, {"exposure", "frame_id"});
+    m_uni_mngr_combine.setManagedUniforms(m_sp_combine, {"exposure", "frame_id", "ext_k"});
     // Create a screen space quad
     CONSTEXPR float ss_quad_pos[] = {-1.0f, -1.0f, 0.0f,    // Bottom left
                                       1.0f, -1.0f, 0.0f,    // Bottom right
@@ -255,24 +255,26 @@ void DeferredRenderer::shade(const int tri_buf_idx) const {
     gl::Viewport(0, 0, m_res_x, m_res_y);
     m_ss_quad_va.draw(gl::TRIANGLE_STRIP);
     // Check if there is fog to render
-    if (0.0f == settings.abs_k + settings.sca_k) return;
-    /* Perform volume shading */
-    m_sp_shade_volume.use();
-    // Set dynamic uniforms
-    m_uni_mngr_vol.setUniformValues(settings.gi_enabled, settings.clamp_r_sq,
-                                    settings.frame_num, settings.max_num_vpls, settings.sca_k,
-                                    settings.abs_k + settings.sca_k,
-                                    settings.sca_k / (settings.abs_k + settings.sca_k),
-                                    tri_buf_idx);
-    // Bind and clear the fog (volume) framebuffer
-    gl::BindFramebuffer(gl::FRAMEBUFFER, m_vol_fbo_handle);
-    gl::Clear(gl::COLOR_BUFFER_BIT);
-    // Render fog at the quarter of the full resolution
-    gl::Viewport(0, 0, m_res_x / 2, m_res_y / 2);
-    m_ss_quad_va.draw(gl::TRIANGLE_STRIP);
+    if (settings.abs_k + settings.sca_k > 0.0f) {
+        /* Perform volume shading */
+        m_sp_shade_volume.use();
+        // Set dynamic uniforms
+        m_uni_mngr_vol.setUniformValues(settings.gi_enabled, settings.clamp_r_sq,
+                                        settings.frame_num, settings.max_num_vpls, settings.sca_k,
+                                        settings.abs_k + settings.sca_k,
+                                        settings.sca_k / (settings.abs_k + settings.sca_k),
+                                        tri_buf_idx);
+        // Bind and clear the fog (volume) framebuffer
+        gl::BindFramebuffer(gl::FRAMEBUFFER, m_vol_fbo_handle);
+        gl::Clear(gl::COLOR_BUFFER_BIT);
+        // Render fog at the quarter of the full resolution
+        gl::Viewport(0, 0, m_res_x / 2, m_res_y / 2);
+        m_ss_quad_va.draw(gl::TRIANGLE_STRIP);
+    }
     /* Combine surface and volume shading results */
     m_sp_combine.use();
-    m_uni_mngr_combine.setUniformValues(settings.exposure, settings.frame_num);
+    m_uni_mngr_combine.setUniformValues(settings.exposure, settings.frame_num,
+                                        settings.abs_k + settings.sca_k);
     // Bind and clear the display framebuffer
     gl::BindFramebuffer(gl::FRAMEBUFFER, DEFAULT_FBO);
     gl::Clear(gl::COLOR_BUFFER_BIT);

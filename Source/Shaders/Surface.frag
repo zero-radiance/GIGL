@@ -339,9 +339,6 @@ void main() {
         // Update the accumulation buffer
         writeToAccumBuffer(frag_col);
     } else {
-        // Read the value from the previous frame
-        frag_col = readFromAccumBuffer();
+        // Do nothing; accumulation buffer values are final
     }
-    // Perform tone mapping
-    frag_col = vec3(1.0) - exp(-exposure * frag_col);
 }

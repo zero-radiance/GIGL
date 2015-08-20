@@ -73,7 +73,7 @@ private:
     GLTextureBuffer     m_hal_tbo;          // Halton sequence texture buffer object
     GLUniformManager<8> m_uni_mngr_surf;    // OpenGL uniform manager for m_sp_shade_surface
     GLUniformManager<8> m_uni_mngr_vol;     // OpenGL uniform manager for m_sp_shade_volume
-    GLUniformManager<2> m_uni_mngr_combine; // OpenGL uniform manager for m_sp_combine
+    GLUniformManager<3> m_uni_mngr_combine; // OpenGL uniform manager for m_sp_combine
     OmniShadowMap       m_ppl_OSM;          // Omnidirectional shadow map for primary lights
     OmniShadowMap       m_vpl_OSM;          // Omnidirectional shadow map for VPLs
     GLuint              m_defer_fbo_handle; // Deferred framebuffer handle
