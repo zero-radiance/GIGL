@@ -1,7 +1,8 @@
 #version 440
 
-#define CAM_RES    1024                  // Camera sensor resolution
+#define CAM_RES    1024                 // Camera sensor resolution
 #define MAX_FRAMES 30                   // Max. number of frames before convergence is achieved
+#define DEPTH_ACC  1000.0				// Depth acceptance factor
 #define SAFE       restrict coherent    // Assume coherency within shader, enforce it between shaders
 
 // Vars IN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -34,7 +35,10 @@ vec3 bilateralUpsampling(in const sampler2D color_tex, in const sampler2D depth_
             const float depth  = texelFetch(depth_tex, pos, 0).r;
             const vec2  n_pos  = vec2(pos) / float(CAM_RES);
             const vec3  color  = texture(color_tex, n_pos).rgb;
-            const float weight = 1.0 / (1000.0 * abs(depth - center_depth) + 1.0);
+            // Lower spatial weights for side pixels (0.7) and corner pixels (0.49)
+            // Lower weights for pixels with larger depth values (higher chance of in-scattering)
+            const float weight = (1.0 - 0.3 * abs(x)) * (1.0 - 0.3 * abs(y)) /
+            					 (max(depth - center_depth, 0.0) * DEPTH_ACC + 1.0);
             accum_weight += weight;
             accum_color  += weight * color;
         }
