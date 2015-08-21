@@ -29,8 +29,9 @@ DensityField::DensityField(const BBox& bb, const int(&res)[3], const float freq,
     const float x_norm{1.0f / (m_res.x - 1)};
     const float y_norm{1.0f / (m_res.y - 1)};
     const float z_norm{1.0f / (m_res.z - 1)};
+    printInfo("The renderer has been started for the first time.");
+    printInfo("Procedurally computing fog density values using simplex noise.");
     // Compute per-pixel noise values
-    printInfo("Procedurally precomputing fog density using simplex noise.");
     #pragma omp parallel for
     for (int z = 0; z < m_res[2]; ++z)
     for (int y = 0; y < m_res[1]; ++y)
@@ -73,9 +74,11 @@ DensityField::DensityField(const BBox& bb, const int(&res)[3], const float freq,
         avg_dens += new_dens;
         m_data[x + y * m_res.x + z * m_res.x * m_res.y] = new_byte_dens;
     }
-    printInfo("Minimal density: %.2f", min_dens);
-    printInfo("Maximal density: %.2f", max_dens);
-    printInfo("Average density: %.2f", avg_dens / static_cast<float>(m_res.x * m_res.y * m_res.z));
+    #ifndef NDEBUG
+        printInfo("Minimal density: %.2f", min_dens);
+        printInfo("Maximal density: %.2f", max_dens);
+        printInfo("Average density: %.2f", avg_dens / static_cast<float>(m_res.x * m_res.y * m_res.z));
+    #endif
     // Save it to disk
     write("Assets\\df.3dt");
     // Load data into OpenGL texture
@@ -266,6 +269,8 @@ void DensityField::createTex() {
 }
 
 void DensityField::computePiDensity(const PerspectiveCamera& cam, const Scene& scene) {
+    printInfo("Performing fog density preintegration.");
+    printInfo("This will take a few seconds. Please wait! :-)");
     const auto& res = m_pi_dens_res = ivec3{cam.resolution(), m_res.z};
     // Allocate storage
     m_pi_dens_data = new float[piDensSize()];

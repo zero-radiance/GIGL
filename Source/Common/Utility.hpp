@@ -49,10 +49,10 @@ static inline void printError(const char* const fmt, ...) {
 }
 
 // For internal use only
-static inline NORETURN void panic() {
-    fprintf(stderr, "%s: %s:%i\n", "Error location", __FILE__, __LINE__);
+static inline NORETURN void panic(const char* const file, const int line) {
+    fprintf(stderr, "Error location: %s : %i\n", file, line);
     abort();
 }
 
 // Print fatal error location and terminate the program
-#define TERMINATE() panic()
+#define TERMINATE() panic(__FILE__, __LINE__)

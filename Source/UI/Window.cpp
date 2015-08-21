@@ -128,6 +128,7 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
     if (!m_window) {
         m_is_ok = false;
         printError("Error while creating GLFW window.");
+        printError("Make sure that your graphics driver supports OpenGL 4.4, and that you are using the discrete GPU.");
         glfwTerminate();
         TERMINATE();
     }
@@ -158,7 +159,7 @@ Window::Window(const int res_x, const int res_y): m_res_x{res_x}, m_res_y{res_y}
     const GLubyte* version{gl::GetString(gl::VERSION)};
     if (!version) {
         m_is_ok = false;
-        printError("Error while reading OpenGL version.");
+        printError("Error while reading the OpenGL version.");
         glfwDestroyWindow(m_window);
         glfwTerminate();
         TERMINATE();
