@@ -86,12 +86,12 @@ layout (location = 0) out vec3 frag_col;
 
 // Returns fragment's position in world space
 vec3 getWorldPos() {
-    return texelFetch(w_positions, 2 * ivec2(gl_FragCoord.xy), 0).rgb;
+    return texelFetch(w_positions, 2 * ivec2(gl_FragCoord.xy) + ivec2(1, 1), 0).rgb;
 }
 
 // Loads parametric ray distances from a texture
 void restoreRayDist(out float t_min, out float t_max) {
-    const vec2 v = imageLoad(fog_dist, 2 * ivec2(gl_FragCoord.xy)).rg;
+    const vec2 v = imageLoad(fog_dist, 2 * ivec2(gl_FragCoord.xy) + ivec2(1, 1)).rg;
     t_min = v.r;
     t_max = v.g;
 }
@@ -256,15 +256,15 @@ void main() {
     frag_col = vec3(0.0);
     if (frame_id < MAX_FRAMES) {
         // Perform shading
-        const vec3 w_pos = getWorldPos();
-        const vec3 ray_o = cam_w_pos;
-        const vec3 ray_d = normalize(w_pos - cam_w_pos);
         // Reload t_min and t_max values computed in the previous shader
         float t_min, t_max;
         restoreRayDist(t_min, t_max);
         if (t_max > 0.0) {
             // There is fog along the ray; sample it
             const int n_samples = gi_enabled ? MAX_VOL_SAMP / 4 : MAX_VOL_SAMP;
+            const vec3 w_pos = getWorldPos();
+            const vec3 ray_o = cam_w_pos;
+            const vec3 ray_d = normalize(w_pos - cam_w_pos);
             // Fetch the random ray offset
             const float z_offset = texelFetch(rnd_offsets, ivec2(gl_FragCoord.xy), 0).r;
             for (int s = 0; s < n_samples; ++s) {
