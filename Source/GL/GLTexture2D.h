@@ -24,3 +24,4 @@ using GLTex2D_1x32F = GLTexture2D<gl::R32F>;
 using GLTex2D_2x32F = GLTexture2D<gl::RG32F>;
 using GLTex2D_3x32F = GLTexture2D<gl::RGB32F>;
 using GLTex2D_4x32F = GLTexture2D<gl::RGBA32F>;
+using GLTex2D_Depth = GLTexture2D<gl::DEPTH_COMPONENT24>;

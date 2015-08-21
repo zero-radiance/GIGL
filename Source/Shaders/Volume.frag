@@ -66,6 +66,7 @@ uniform vec3          inv_fog_dims;     // Inverse of fog dimensions
 uniform float         sca_k;            // Scattering coefficient per unit density
 uniform float         ext_k;            // Extinction coefficient per unit density
 uniform float         sca_albedo;       // Probability of photon being scattered
+uniform sampler2D     rnd_offsets;      // Primary (camera) rays' random offset
 uniform SAFE readonly layout(rg32f) image2D fog_dist; // Primary ray entry/exit distances
 
 // Misc
@@ -262,12 +263,14 @@ void main() {
         float t_min, t_max;
         restoreRayDist(t_min, t_max);
         if (t_max > 0.0) {
-            // There is fog along the ray
+            // There is fog along the ray; sample it
             const int n_samples = gi_enabled ? MAX_VOL_SAMP / 4 : MAX_VOL_SAMP;
+            // Fetch the random ray offset
+            const float z_offset = texelFetch(rnd_offsets, ivec2(gl_FragCoord.xy), 0).r;
             for (int s = 0; s < n_samples; ++s) {
                 // Compute the sample position
                 const vec2 xy = gl_FragCoord.xy / CAM_RES;
-                const float z = texelFetch(halton_seq, s + n_samples * frame_id).r;
+                const float z = clamp(texelFetch(halton_seq, s + n_samples * frame_id).r + z_offset, 0.0, 0.995);
                 const float t = t_min + z * (t_max - t_min);
                 const vec3  s_pos = ray_o + t * ray_d;
                 // Compute transmittance on the camera-to-sample interval

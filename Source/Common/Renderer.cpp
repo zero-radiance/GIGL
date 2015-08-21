@@ -2,6 +2,7 @@
 #include "Constants.h"
 #include "Utility.hpp"
 #include "Halton.hpp"
+#include "Random.h"
 #include "..\GL\GLShader.hpp"
 #include "..\GL\GLUniformManager.hpp"
 #include "..\GL\GLTexture2D.hpp"
@@ -22,12 +23,14 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
                   m_ppl_OSM{PRI_SM_RES, 1,          MAX_DIST, TEX_U_PPL_SM},
                   m_vpl_OSM{SEC_SM_RES, MAX_N_VPLS, MAX_DIST, TEX_U_VPL_SM},
                   m_ss_quad_va{ss_quad_va_components, ss_quad_va_comp_cnts},
+                  m_tex_depth{TEX_U_DEPTH, res_x, res_y, false, false},
                   m_tex_accum{TEX_U_ACCUM, res_x, res_y, false, false},
                   m_tex_w_pos{TEX_U_W_POS, res_x, res_y, false, false},
                   m_tex_w_norm{TEX_U_W_NORM, res_x, res_y, false, false},
                   m_tex_mat_id{TEX_U_MAT_ID, res_x, res_y, false, false},
                   m_tex_fog_dist{TEX_U_FOG_DIST, res_x, res_y, false, false},
-                  m_tex_vol_comp{TEX_U_VOL_COMP, res_x / 2, res_y / 2, false, true} {
+                  m_tex_vol_comp{TEX_U_VOL_COMP, res_x / 2, res_y / 2, false, true},
+                  m_tex_rnd_offset{TEX_U_RND_OFF, res_x / 2, res_y / 2, false, false} {
     // Generate a Halton sequence for 30 frames with (up to) 24 samples per frame
     CONSTEXPR GLuint seq_sz{MAX_FRAMES * MAX_VOL_SAMP};
     GLfloat hal_seq[seq_sz];
@@ -58,6 +61,8 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
     // Generate framebuffers
     generateDeferredFBO();
     generateVolumeFBO();
+    // Fill the texture with random numbers
+    fillRandOffsetTex();
 }
 
 void DeferredRenderer::loadShaders() {
@@ -88,13 +93,9 @@ void DeferredRenderer::generateDeferredFBO() {
     // Generate and bind the FBO
     gl::GenFramebuffers(1, &m_defer_fbo_handle);
     gl::BindFramebuffer(gl::FRAMEBUFFER, m_defer_fbo_handle);
-    // Generate and bind the depth buffer
-    gl::GenRenderbuffers(1, &m_depth_rbo_handle);
-    gl::BindRenderbuffer(gl::RENDERBUFFER, m_depth_rbo_handle);
-    gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, m_res_x, m_res_y);
-    gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
-                                gl::RENDERBUFFER, m_depth_rbo_handle);
     // Attach textures to the framebuffer
+    gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::TEXTURE_2D,
+                             m_tex_depth.id(), 0);
     gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D,
                              m_tex_w_pos.id(), 0);
     gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT1, gl::TEXTURE_2D,
@@ -130,6 +131,25 @@ void DeferredRenderer::generateVolumeFBO() {
     }
 }
 
+void DeferredRenderer::fillRandOffsetTex() const {
+    // It is a subsampled, half-resolution texture
+    const int n_elems{m_res_x / 2 * m_res_y / 2};
+    float* offset_data{new float[n_elems]};
+    for (int i = 0; i < n_elems; ++i) {
+        // Generate a value on [0, 1)
+        const float unit_rnd{UnitRNG::generate()};
+        // Map it to [-0.015, 0.015)
+        const float mapped_rnd{0.03f * unit_rnd - 0.015f};
+        offset_data[i] = mapped_rnd;
+    }
+    // Upload the texture to GPU
+    gl::BindTexture(gl::TEXTURE_2D, m_tex_rnd_offset.id());
+    gl::TexSubImage2D(gl::TEXTURE_2D, 0, 0, 0, m_res_x / 2, m_res_y / 2,
+                      gl::RED, gl::FLOAT, offset_data);
+    // Free the memory
+    delete[] offset_data;
+}
+
 DeferredRenderer::DeferredRenderer(DeferredRenderer&& dr): settings(dr.settings),
                   m_res_x{dr.m_res_x}, m_res_y{dr.m_res_y},
                   m_sp_osm{std::move(dr.m_sp_osm)}, m_sp_gbuf{std::move(dr.m_sp_gbuf)},
@@ -142,15 +162,16 @@ DeferredRenderer::DeferredRenderer(DeferredRenderer&& dr): settings(dr.settings)
                   m_uni_mngr_combine{std::move(dr.m_uni_mngr_combine)},
                   m_ppl_OSM{std::move(dr.m_ppl_OSM)}, m_vpl_OSM{std::move(dr.m_vpl_OSM)},
                   m_defer_fbo_handle{dr.m_defer_fbo_handle},
-                  m_depth_rbo_handle{dr.m_depth_rbo_handle},
                   m_vol_fbo_handle{dr.m_vol_fbo_handle},
                   m_ss_quad_va{std::move(dr.m_ss_quad_va)},
+                  m_tex_depth{std::move(dr.m_tex_depth)},
                   m_tex_accum{std::move(m_tex_accum)},
                   m_tex_w_pos{std::move(dr.m_tex_w_pos)},
                   m_tex_w_norm{std::move(dr.m_tex_w_norm)},
                   m_tex_mat_id{std::move(dr.m_tex_mat_id)},
                   m_tex_fog_dist{std::move(dr.m_tex_fog_dist)},
-                  m_tex_vol_comp{std::move(dr.m_tex_vol_comp)} {
+                  m_tex_vol_comp{std::move(dr.m_tex_vol_comp)},
+                  m_tex_rnd_offset{std::move(dr.m_tex_rnd_offset)} {
     // Mark as moved
     dr.m_defer_fbo_handle = 0;
 }
@@ -159,7 +180,6 @@ DeferredRenderer& DeferredRenderer::operator=(DeferredRenderer&& dr) {
     assert(this != &dr);
     // Free memory
     gl::DeleteFramebuffers(1, &m_vol_fbo_handle);
-    gl::DeleteRenderbuffers(1, &m_depth_rbo_handle);
     gl::DeleteFramebuffers(1, &m_defer_fbo_handle);
     // Now copy the data
     memcpy(this, &dr, sizeof(*this));
@@ -171,7 +191,6 @@ DeferredRenderer& DeferredRenderer::operator=(DeferredRenderer&& dr) {
 DeferredRenderer::~DeferredRenderer() {
     // Check if it was moved
     if (m_defer_fbo_handle) {
-        gl::DeleteRenderbuffers(1, &m_depth_rbo_handle);
         gl::DeleteFramebuffers(1, &m_defer_fbo_handle);
     }
 }

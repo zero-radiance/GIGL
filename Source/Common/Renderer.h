@@ -63,6 +63,8 @@ private:
     void generateDeferredFBO();
     // Generates the subsampled volume contribution framebuffer object
     void generateVolumeFBO();
+    // Fills the random ray offset texture
+    void fillRandOffsetTex() const;
     // Private data members
     GLsizei             m_res_x, m_res_y;   // Viewport width and height
     GLSLProgram         m_sp_osm;           // GLSL program which generates omnidir. shadow maps
@@ -77,13 +79,14 @@ private:
     OmniShadowMap       m_ppl_OSM;          // Omnidirectional shadow map for primary lights
     OmniShadowMap       m_vpl_OSM;          // Omnidirectional shadow map for VPLs
     GLuint              m_defer_fbo_handle; // Deferred framebuffer handle
-    GLuint              m_depth_rbo_handle; // Depth renderbuffer handle
     GLuint              m_vol_fbo_handle;   // Renders subsampled volume contribution
     GLVertArray         m_ss_quad_va;       // Vertex array with a screen space quad
+    GLTex2D_Depth       m_tex_depth;        // Depth buffer texture
     GLTex2D_4x32F       m_tex_accum;        // Accumulation buffer image/texture
     GLTex2D_3x32F       m_tex_w_pos;        // World position texture
     GLTex2D_2x32F       m_tex_w_norm;       // Normal vector texture
     GLTex2D_1x8UI       m_tex_mat_id;       // Material id texture
     GLTex2D_2x32F       m_tex_fog_dist;     // Primary ray entry/exit distances for fog
     GLTex2D_3x32F       m_tex_vol_comp;     // Subsampled volume contribution (radiance)
+    GLTex2D_1x32F       m_tex_rnd_offset;   // Primary (camera) rays' random offset texture
 };

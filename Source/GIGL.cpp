@@ -89,6 +89,7 @@ int main(int, char**) {
         engine.volumeSP().setUniformValue("pi_dens",          TEX_U_PI_DENS);
         engine.volumeSP().setUniformValue("halton_seq",       TEX_U_HALTON);
         engine.volumeSP().setUniformValue("w_positions",      TEX_U_W_POS);
+        engine.volumeSP().setUniformValue("rnd_offsets",      TEX_U_RND_OFF);
         engine.volumeSP().setUniformValue("fog_dist",         IMG_U_FOG_DIST);
         engine.volumeSP().setUniformValue("inv_max_dist_sq",  invSq(MAX_DIST));
         engine.volumeSP().setUniformValue("fog_bounds[0]",    fog_pt_min);
@@ -97,6 +98,7 @@ int main(int, char**) {
         engine.combineSP().use();
         engine.combineSP().setUniformValue("accum_buffer",    IMG_U_ACCUM);
         engine.combineSP().setUniformValue("vol_comp",        TEX_U_VOL_COMP);
+        engine.combineSP().setUniformValue("depth_buf",       TEX_U_DEPTH);
     }
     // Init dynamic uniforms
     InputHandler::init(&engine.settings);
