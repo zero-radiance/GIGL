@@ -1,5 +1,7 @@
 GIGL - Tiny Global Illumination OpenGL Renderer
 
+![scr_gi](https://cloud.githubusercontent.com/assets/2144122/9428790/411fcdbe-49ba-11e5-9a44-d2c1615184ab.jpg)
+
 ![scr_mult_scat](https://cloud.githubusercontent.com/assets/2144122/9428697/74b8a5c2-49b7-11e5-9f09-8601bd2423e4.jpg)
 
 DISCLAIMER: this is a work in progress! :-)
