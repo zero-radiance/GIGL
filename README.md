@@ -29,6 +29,7 @@ Controls:
 * Numpad * /    control the exposure time;
 * F             toggle the fog;
 * G             toggle global illumination;
+* M             toggle the use of ray marching to compute transmittance along shadow rays;
 * SPACE         reset all settings;
 * R             reset the accumulation buffer (hold to temporarily disable it);
 * C             toggle clamping and the primary light source;

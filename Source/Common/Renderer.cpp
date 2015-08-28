@@ -42,7 +42,7 @@ DeferredRenderer::DeferredRenderer(const int res_x, const int res_y):
     m_uni_mngr_surf.setManagedUniforms(m_sp_shade_surface, {"gi_enabled", "clamp_rsq",
                                                             "frame_id", "n_vpls", "ext_k",
                                                             "sca_albedo", "tri_buf_idx"});
-    m_uni_mngr_vol.setManagedUniforms(m_sp_shade_volume, {"gi_enabled", "clamp_rsq",
+    m_uni_mngr_vol.setManagedUniforms(m_sp_shade_volume, {"gi_enabled", "clamp_rsq", "transm_opt",
                                                           "frame_id", "n_vpls", "sca_k", "ext_k",
                                                           "sca_albedo", "tri_buf_idx"});
     m_uni_mngr_combine.setManagedUniforms(m_sp_combine, {"exposure", "frame_id", "ext_k"});
@@ -277,7 +277,7 @@ void DeferredRenderer::shade(const int tri_buf_idx) const {
         /* Perform volume shading */
         m_sp_shade_volume.use();
         // Set dynamic uniforms
-        m_uni_mngr_vol.setUniformValues(settings.gi_enabled, settings.clamp_r_sq,
+        m_uni_mngr_vol.setUniformValues(settings.gi_enabled, settings.clamp_r_sq, settings.transm_opt,
                                         settings.frame_num, settings.max_num_vpls, settings.sca_k,
                                         settings.abs_k + settings.sca_k,
                                         settings.sca_k / (settings.abs_k + settings.sca_k),

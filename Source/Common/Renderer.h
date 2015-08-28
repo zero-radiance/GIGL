@@ -20,6 +20,7 @@ struct RenderSettings {
     RULE_OF_ZERO(RenderSettings);
     bool      gi_enabled;       // Indicates whether Global Illumination is enabled
     bool      clamp_r_sq;       // Indicates whether radius squared of VPLs is being clamped
+    bool	  transm_opt;       // If set to false, shadow rays use ray marching for transmittance
     int       exposure;         // Exposure time; higher values increase brightness
     int       frame_num;        // Current frame number
     uint      curr_time_ms;     // Number of milliseconds since timer reset (curr. frame)
@@ -74,7 +75,7 @@ private:
     GLSLProgram         m_sp_combine;       // GLSL program which combines surf. & vol. shading
     GLTextureBuffer     m_hal_tbo;          // Halton sequence texture buffer object
     GLUniformManager<7> m_uni_mngr_surf;    // OpenGL uniform manager for m_sp_shade_surface
-    GLUniformManager<8> m_uni_mngr_vol;     // OpenGL uniform manager for m_sp_shade_volume
+    GLUniformManager<9> m_uni_mngr_vol;     // OpenGL uniform manager for m_sp_shade_volume
     GLUniformManager<3> m_uni_mngr_combine; // OpenGL uniform manager for m_sp_combine
     OmniShadowMap       m_ppl_OSM;          // Omnidirectional shadow map for primary lights
     OmniShadowMap       m_vpl_OSM;          // Omnidirectional shadow map for VPLs

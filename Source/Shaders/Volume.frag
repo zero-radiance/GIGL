@@ -72,6 +72,7 @@ uniform SAFE readonly layout(rg32f) image2D fog_dist; // Primary ray entry/exit 
 // Misc
 uniform bool          gi_enabled;       // Flag indicating whether Global Illumination is enabled
 uniform bool          clamp_rsq;        // Determines whether radius squared is clamped
+uniform bool          transm_opt;       // If set to false, shadow rays use ray marching for transmittance
 uniform int           frame_id;         // Frame index, is set to zero on reset
 uniform int           exposure;         // Exposure time
 uniform vec3          cam_w_pos;        // Camera position in world space
@@ -155,15 +156,25 @@ float rayMarch(in const vec3 ray_o, in const vec3 ray_d,
 }
 
 // Calculates transmittance using ray marching
-float calcTransm(in const vec3 samp_pt, in const vec3 dir, in const float dist_sq) {
+float calcTransm(in const vec3 samp_pt, const float density, in const vec3 dir, in const float dist_sq) {
     float transm = 1.0;
     if (ext_k > 0.0) {
+        // Fog is enabled
         const float max_dist = sqrt(dist_sq);
         float t_min, t_max;
         if (intersectBBox(fog_bounds, samp_pt, dir, max_dist, t_min, t_max)) {
             t_min  = max(t_min, 0.0);
             t_max  = min(t_max, max_dist);
-            transm = rayMarch(samp_pt, dir, t_min, t_max);
+            if (transm_opt) {
+                // Assume that the participating medium is constant along the ray
+                // Use the extinction properties at the sample point
+                const float opt_depth = ext_k * density * (t_max - t_min);
+                // Apply Beer's law
+                transm = exp(-opt_depth);
+            } else {
+                // Ray march through the volume
+                transm = rayMarch(samp_pt, dir, t_min, t_max);
+            }
         }
     }
     return transm;
@@ -219,12 +230,13 @@ vec3 calcPplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
     if (visibility > 0.0) {
         // Light is visible from the fragment
         const vec3  I       = normalize(-d);
-        const float transm  = calcTransm(w_pos, I, dist_sq);
+        const float density = calcFogDens(w_pos);
+        const float transm  = calcTransm(w_pos, density, I, dist_sq);
         const float falloff = 1.0 / dist_sq;
         const vec3  Li      = transm * ppls[light_id].intens * falloff;
         // Evaluate the rendering equation
         const float cos_the = -dot(I, O);
-        return evalPhaseHG(cos_the) * sampleScaK(w_pos) * Li;
+        return evalPhaseHG(cos_the) * sca_k * density * Li;
     } else {
         return vec3(0.0);
     }
@@ -241,12 +253,13 @@ vec3 calcVplContrib(in const int light_id, in const vec3 w_pos, in const vec3 O)
     if (visibility > 0.0) {
         // Light is visible from the fragment
         const vec3  I       = normalize(-d);
-        const float transm  = calcTransm(w_pos, I, dist_sq);
+        const float density = calcFogDens(w_pos);
+        const float transm  = calcTransm(w_pos, density, I, dist_sq);
         const float falloff = 1.0 / max(dist_sq, CLAMP_DIST_SQ);
         const vec3  Li      = transm * computeLe(vpls[light_id], -I) * falloff;
         // Evaluate the rendering equation
         const float cos_the = -dot(I, O);
-        return evalPhaseHG(cos_the) * sampleScaK(w_pos) * Li;
+        return evalPhaseHG(cos_the) * sca_k * density * Li;
     } else {
         return vec3(0.0);
     }

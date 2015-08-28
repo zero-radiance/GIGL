@@ -43,7 +43,12 @@ void InputHandler::handleToggles(GLFWwindow* const wnd) {
             m_params->clamp_r_sq = !m_params->clamp_r_sq;
             updateLastTime();
             resetFrameCount();
-        } else if (glfwGetKey(wnd, GLFW_KEY_F)) {
+        } else if (glfwGetKey(wnd, GLFW_KEY_M)) {
+            // Toggle ray marching transmittance optimization
+            m_params->transm_opt = !m_params->transm_opt;
+            updateLastTime();
+            resetFrameCount();
+        } else if (glfwGetKey( wnd, GLFW_KEY_F)) {
             // Toggle fog
             if (m_params->maj_ext_k != 0.0f) {
                 m_params->maj_ext_k = m_params->sca_k = m_params->abs_k = 0.0f;
@@ -127,6 +132,7 @@ void InputHandler::reset() {
     // Reset m_params
     m_params->gi_enabled   = false;
     m_params->clamp_r_sq   = true;
+    m_params->transm_opt   = false;
     m_params->exposure     = EXPOSURE;
     m_params->frame_num    = 0;
     m_params->max_num_vpls = MAX_N_VPLS;
