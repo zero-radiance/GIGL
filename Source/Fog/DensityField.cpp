@@ -307,7 +307,8 @@ void DensityField::computePiDensity(const PerspectiveCamera& cam, const Scene& s
                             // Use trapezoidal rule for integration
                             dens += 0.5f * (curr_dens + prev_dens);
                             prev_dens = curr_dens;
-                            if (3 == i % 4) {
+                            if (2 == i % 4) {
+                                // We are in the middle of the camera-space voxel (froxel)
                                 const int z{i / 4};
                                 m_pi_dens_data[x + y * res.x + z * res.x * res.y] = dens * dt;
                             }
