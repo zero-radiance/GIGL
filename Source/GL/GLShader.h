@@ -58,8 +58,8 @@ private:
     // Attaches (valid) shader to the shader program
     void attachShader(const GLSLShader& sh);
     // Private data members
-    GLuint			        m_handle;       // OpenGL handle
-    bool					m_is_ok;        // Status
+    GLuint                  m_handle;       // OpenGL handle
+    bool                    m_is_ok;        // Status
     bool                    m_is_linked;    // Program linking status
     std::vector<GLSLShader> m_shaders;      // Attached shaders
 };

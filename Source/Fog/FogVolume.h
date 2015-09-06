@@ -32,8 +32,8 @@ public:
     BBox::IntDist intersect(const rt::Ray& ray) const;
 private:
     // Private data members
-    DensityField m_df;		    // Scalar-valued particle density field
-    float		 m_abs_k;	    // Absorption coefficient per unit density
-    float		 m_sca_k;	    // Scattering coefficient per unit density
-    float		 m_maj_ext_k;	// Max. extinction coefficient present in volume
+    DensityField m_df;          // Scalar-valued particle density field
+    float        m_abs_k;       // Absorption coefficient per unit density
+    float        m_sca_k;       // Scattering coefficient per unit density
+    float        m_maj_ext_k;   // Max. extinction coefficient present in volume
 };

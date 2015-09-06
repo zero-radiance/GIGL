@@ -49,7 +49,7 @@ private:
     // Performs object destruction
     void destroy();
     // Private data members
-    BBox	   m_bbox;		            // Bounding box/volume
+    BBox       m_bbox;                  // Bounding box/volume
     glm::ivec3 m_res;                   // Resolution in X-Y-Z
     GLubyte*   m_data;                  // Scalar density data
     GLuint     m_tex_handle;            // Density texture OpenGL handle

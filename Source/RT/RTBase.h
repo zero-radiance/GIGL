@@ -69,11 +69,11 @@ namespace rt {
         // Returns the value of specular exponent
         float nS() const;
     private:
-        glm::vec3 m_k_d;			// Diffuse coefficient
+        glm::vec3 m_k_d;            // Diffuse coefficient
         uint8_t   pad[4];           // 4 byte padding
-        glm::vec3 m_k_s;			// Specular coefficient
-        float	  m_n_s;			// Specular exponent
-        glm::vec3 m_k_e;	        // Emission [coefficient]
+        glm::vec3 m_k_s;            // Specular coefficient
+        float     m_n_s;            // Specular exponent
+        glm::vec3 m_k_e;            // Emission [coefficient]
         uint8_t   slack[4];         // 4 byte padding
     };
 
@@ -98,9 +98,9 @@ namespace rt {
             float                distance;
             glm::vec3            normal;
         } inters;                   // Stores ray-primitive intersection information
-        glm::vec3 o;				// Origin
-        glm::vec3 d;				// Direction
-        glm::vec3 inv_d;			// Inverse of direction
+        glm::vec3 o;                // Origin
+        glm::vec3 d;                // Direction
+        glm::vec3 inv_d;            // Inverse of direction
         float     t_min, t_max;     // Valid intersection distance range, s.t. t_max >= t_min > 0
     };
 
@@ -120,6 +120,6 @@ namespace rt {
         bool intersect(Ray& ray) const;
     private:
         glm::uvec3 m_indices;       // Indices in vectors of vertices, normals and tex. coords
-        uint       m_mat_id;		// Index in vector of materials
+        uint       m_mat_id;        // Index in vector of materials
     };
 }

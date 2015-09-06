@@ -30,10 +30,10 @@ private:
     // Performs buffer destruction
     void destroy();
     // Private data members
-    GLuint	 m_handle;		    // OpenGL handle
+    GLuint   m_handle;          // OpenGL handle
     GLuint   m_n_members;       // Number of buffer data members
-    GLuint	 m_block_sz;        // Uniform block size in bytes
+    GLuint   m_block_sz;        // Uniform block size in bytes
     GLubyte* m_block_buffer;    // Block buffer contents
-    GLint*	 m_offsets;         // Offset to each data member in bytes
+    GLint*   m_offsets;         // Offset to each data member in bytes
     bool     m_is_buffered;     // Flag indicating whether data is buffered on GPU
 };

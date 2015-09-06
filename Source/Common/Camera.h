@@ -41,6 +41,6 @@ private:
     glm::vec3  m_bottom_left;   // Bottom left corner of the virtual sensor
     glm::vec3  m_step_x;        // Horizontal dimensions of virtual sensor element
     glm::vec3  m_step_y;        // Vertical dimensions of virtual sensor element
-    glm::mat4  m_view_mat;	    // World to Camera space transformation matrix
-    glm::mat4  m_proj_mat;	    // Camera space to Homogeneous space transformation matrix
+    glm::mat4  m_view_mat;      // World to Camera space transformation matrix
+    glm::mat4  m_proj_mat;      // Camera space to Homogeneous space transformation matrix
 };

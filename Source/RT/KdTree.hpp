@@ -16,13 +16,13 @@ namespace rt {
                                   std::vector<uint>& leaf_prim_ids) : is_leaf{1} {
         leaf.n_prims = n_prims;
         switch (leaf.n_prims) {
-            case 0:							// Empty leaf
+            case 0:                         // Empty leaf
                 single_prim_id = 0;
                 break;
-            case 1:							// Store primitive index directly
+            case 1:                         // Store primitive index directly
                 single_prim_id = overlap_prim_ids[0];
                 break;
-            default:						// Two or more primitives
+            default:                        // Two or more primitives
                 prims_offset = static_cast<uint>(leaf_prim_ids.size());
                 leaf_prim_ids.insert(leaf_prim_ids.end(), overlap_prim_ids,
                                      overlap_prim_ids + n_prims);
@@ -158,8 +158,8 @@ namespace rt {
         } else {
             // Initialize interior node
             float best_cost    = FLT_MAX;       // Best splitting cost
-            uint  best_axis    = UINT32_MAX;	// Best axis to perform split along
-            uint  best_edge_id = UINT32_MAX;	// Best bounding edge index for splitting
+            uint  best_axis    = UINT32_MAX;    // Best axis to perform split along
+            uint  best_edge_id = UINT32_MAX;    // Best bounding edge index for splitting
             const float inv_total_sa{1.0f / node_box.computeArea()};
             const vec3 diag{node_box.dimensions()};
             // Sort all three axes in parallel; slower, but produces the highest quality tree

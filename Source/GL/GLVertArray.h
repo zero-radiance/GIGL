@@ -28,14 +28,14 @@ private:
     struct VertBuffer {
         VertBuffer() = default;
         RULE_OF_ZERO(VertBuffer);
-        GLuint	handle;                 // OpenGL handle
+        GLuint  handle;                 // OpenGL handle
         GLsizei n_components;           // Number of FP components per element
         std::vector<GLfloat> data_vec;  // Storage
     };
     // Performs array destruction
     void destroy();
     // Private data members
-    GLuint		  m_handle;             // OpenGL handle
+    GLuint        m_handle;             // OpenGL handle
     GLsizei       m_n_vbos;             // Number of Vertex Buffer Objects (VBOs)
     VertBuffer*   m_vbos;               // Array of Vertex Buffer Objects (VBOs)
     bool          m_is_buffered;        // Flag indicating whether data is buffered on GPU
