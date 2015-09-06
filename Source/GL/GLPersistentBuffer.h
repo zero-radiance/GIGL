@@ -19,6 +19,8 @@ public:
     // Binds buffer to buffer binding point
     void bind(const GLuint bind_idx) const;
 private:
+    // Performs buffer initialization
+    void init();
     // Performs buffer destruction
     void destroy();
     // Private data members

@@ -4,38 +4,37 @@
 
 template <GLenum T>
 GLPersistentBuffer<T>::GLPersistentBuffer(const size_t byte_sz): m_byte_sz{byte_sz} {
-    gl::GenBuffers(1, &m_handle);
-    // Allocate buffer on GPU
-    gl::BindBuffer(T, m_handle);
-    static const GLbitfield map_flags{gl::MAP_PERSISTENT_BIT |  // Persistent flag
-                                      gl::MAP_COHERENT_BIT   |  // Make changes auto. visible to GPU
-                                      gl::MAP_WRITE_BIT };      // Map it for writing
-    gl::BufferStorage(T, m_byte_sz, nullptr, map_flags);
-    // Map the data
-    m_buffer = gl::MapBufferRange(T, 0, m_byte_sz, map_flags);
+    // Initialize the buffer
+    init();
 }
 
 template <GLenum T>
 GLPersistentBuffer<T>::GLPersistentBuffer(const GLPersistentBuffer& pbo): m_byte_sz{pbo.m_byte_sz} {
-    gl::GenBuffers(1, &m_handle);
-    // Allocate buffer on GPU
-    gl::BindBuffer(T, m_handle);
-    static const GLbitfield map_flags{gl::MAP_PERSISTENT_BIT |  // Persistent flag
-                                      gl::MAP_COHERENT_BIT   |  // Make changes auto. visible to GPU
-                                      gl::MAP_WRITE_BIT };      // Map it for writing
-    gl::BufferStorage(T, m_byte_sz, nullptr, map_flags);
-    // Map the data
-    m_buffer = gl::MapBufferRange(T, 0, m_byte_sz, map_flags);
+    // Initialize the buffer
+    init();
+    // Copy the buffer contents
+    memcpy(m_buffer, pbo.m_buffer, m_byte_sz);
 }
 
 template <GLenum T>
 GLPersistentBuffer<T>& GLPersistentBuffer<T>::operator=(const GLPersistentBuffer& pbo) {
-    // Destroy the old buffer
-    // Technically, it may be possible to reuse it, but
-    // destroying it and creating a new one is simpler and faster
-    destroy();
-    // Now copy the data
-    m_byte_sz = pbo.m_byte_sz;
+    if (this != &pbo) {
+        // Destroy the old buffer
+        // Technically, it may be possible to reuse it, but
+        // destroying it and creating a new one is simpler and faster
+        destroy();
+        // Now copy the data
+        m_byte_sz = pbo.m_byte_sz;
+        // Initialize the buffer
+        init();
+        // Copy the buffer contents
+        memcpy(m_buffer, pbo.m_buffer, m_byte_sz);
+    }
+    return *this;
+}
+
+template <GLenum T>
+void GLPersistentBuffer<T>::init() {
     gl::GenBuffers(1, &m_handle);
     // Allocate buffer on GPU
     gl::BindBuffer(T, m_handle);
@@ -45,7 +44,6 @@ GLPersistentBuffer<T>& GLPersistentBuffer<T>::operator=(const GLPersistentBuffer
     gl::BufferStorage(T, m_byte_sz, nullptr, map_flags);
     // Map the data
     m_buffer = gl::MapBufferRange(T, 0, m_byte_sz, map_flags);
-    return *this;
 }
 
 template <GLenum T>
@@ -56,9 +54,9 @@ GLPersistentBuffer<T>::GLPersistentBuffer(GLPersistentBuffer&& pbo): m_buffer{pb
     pbo.m_handle = 0;
 }
 
-
 template <GLenum T>
 GLPersistentBuffer<T>& GLPersistentBuffer<T>::operator=(GLPersistentBuffer&& pbo) {
+    assert(this != &pbo);
     // Destroy the old buffer
     // Technically, it may be possible to reuse it, but
     // destroying it and creating a new one is simpler and faster
