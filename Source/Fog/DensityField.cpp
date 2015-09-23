@@ -277,7 +277,7 @@ void DensityField::computePiDensity(const PerspectiveCamera& cam, const Scene& s
     // Set up render loop
     assert(0 == res.x % PACKET_SZ && 0 == res.y % PACKET_SZ);
     const ivec2 n_packets{cam.resolution() / PACKET_SZ};
-    #pragma omp for
+    #pragma omp parallel for
     for (int p_j = 0; p_j < n_packets.y; ++p_j)
         for (int p_i = 0; p_i < n_packets.x; ++p_i)
             for (int p_y = 0; p_y < PACKET_SZ; ++p_y)
