@@ -25,7 +25,7 @@ static inline void printInternal(FILE* const stream, const char* const fmt, cons
     struct tm time_info;
     time(&raw_time);
     localtime_s(&time_info, &raw_time);
-    fprintf(stdout, "[%i:%i%:%i] ", time_info.tm_hour, time_info.tm_min, time_info.tm_sec);
+    fprintf(stdout, "[%i:%i:%i] ", time_info.tm_hour, time_info.tm_min, time_info.tm_sec);
     // Print arguments
     vfprintf(stream, fmt, args);
 }
