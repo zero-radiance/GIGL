@@ -12,7 +12,7 @@ public:
     GLVertArray() = delete;
     RULE_OF_FIVE(GLVertArray);
     // Constructs a vertex array with specified attributes
-    explicit GLVertArray(const GLuint n_attr, const GLsizei* const component_counts);
+    explicit GLVertArray(const GLsizei n_attr, const GLsizei* const component_counts);
     // Returns vertex array's OpenGL handle
     GLuint id() const;
     // Loads data for specified attribute from std::vector

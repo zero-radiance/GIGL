@@ -9,7 +9,7 @@ using glm::vec3;
 using glm::uvec3;
 using glm::normalize;
 
-CONSTEXPR uint	  n_mesh_attr         = 2;		        // Position, normal
+CONSTEXPR GLsizei n_mesh_attr         = 2;              // Position, normal
 CONSTEXPR GLsizei mesh_attr_lengths[] = {3, 3};         // vec3, vec3
 
 Scene::Scene(): m_geom_va{1, mesh_attr_lengths},

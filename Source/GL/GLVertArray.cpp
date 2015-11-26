@@ -3,7 +3,7 @@
 #include <OpenGL\gl_core_4_4.hpp>
 #include "..\Common\Constants.h"
 
-GLVertArray::GLVertArray(const GLuint n_attr, const GLsizei* const component_counts):
+GLVertArray::GLVertArray(const GLsizei n_attr, const GLsizei* const component_counts):
                          m_n_vbos{n_attr}, m_vbos{new VertBuffer[n_attr]}, m_is_buffered{false} {
     // Create vertex array object
     gl::GenVertexArrays(1, &m_handle);
