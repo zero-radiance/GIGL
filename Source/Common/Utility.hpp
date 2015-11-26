@@ -49,7 +49,7 @@ static inline void printError(const char* const fmt, ...) {
 }
 
 // For internal use only
-static inline NORETURN void panic(const char* const file, const int line) {
+NORETURN static inline void panic(const char* const file, const int line) {
     fprintf(stderr, "Error location: %s : %i\n", file, line);
     abort();
 }
