@@ -159,7 +159,7 @@ void Scene::loadObjects(const char* const file_name) {
 }
 
 Scene::Object::Object(const uint material_id, GLVertArray&& va, GLElementBuffer&& ebo):
-               mat_id{material_id}, va{std::move(va)}, ebo{std::move(ebo)} {}
+               mat_id{material_id}, va{va}, ebo{ebo} {}
 
 void Scene::addFog(const char* const dens_file_name, const char* const pi_dens_file_name,
                    const float maj_ext_k, const float abs_k, const float sca_k,
